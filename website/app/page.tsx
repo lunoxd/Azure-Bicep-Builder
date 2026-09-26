@@ -3,7 +3,6 @@
 import React, { useState } from 'react';
 import { Download, Layers, FolderDown, ExternalLink } from 'lucide-react';
 import Prism from './components/Prism';
-import { Badge } from './components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from './components/ui/tabs';
 
 const AppleIcon = ({ size = 16 }: { size?: number }) => (
@@ -84,11 +83,6 @@ export default function HomePage() {
 
         <section className="hero">
           <div className="hero-content">
-            <div className="hero-badge">
-              <Badge variant="secondary">v0.1.0 Release</Badge>
-              <span>Open Source Local-First Architecture Studio</span>
-            </div>
-
             <h1 className="hero-title">
               Visual Cloud Architecture<br />
               <span className="hero-title-gradient">Meets Real Azure Bicep</span>
@@ -175,13 +169,6 @@ export default function HomePage() {
                   </div>
                 </TabsContent>
               </Tabs>
-
-              <div className="hero-meta">
-                <Badge variant="secondary">✨ Local-first</Badge>
-                <Badge variant="secondary">🔒 No telemetry</Badge>
-                <Badge variant="secondary">⚡ ARM REST & CLI</Badge>
-                <Badge variant="secondary">📄 MIT Licensed</Badge>
-              </div>
             </div>
           </div>
         </section>
