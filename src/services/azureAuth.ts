@@ -260,7 +260,29 @@ export async function deployWithArmRestApi(
   const token = session.token.access_token;
   const deploymentName = `bicep-studio-${Date.now()}`;
 
-  // 1. Build ARM JSON template from resources
+  // 1. Ensure Azure Resource Group exists first
+  const rgUrl = `https://management.azure.com/subscriptions/${subscriptionId}/resourcegroups/${resourceGroup}?api-version=2021-04-01`;
+  const rgProxyUrl = rgUrl.replace('https://management.azure.com', '/api/azure-arm');
+  try {
+    const rgRes = await fetch(rgProxyUrl, {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        location: region,
+      }),
+    });
+    if (!rgRes.ok) {
+      const rgErr = await rgRes.text();
+      console.warn('Resource group pre-provision notice:', rgErr);
+    }
+  } catch (rgError) {
+    console.warn('Failed to pre-provision resource group:', rgError);
+  }
+
+  // 2. Build ARM JSON template from resources
   const armTemplate = {
     $schema: 'https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#',
     contentVersion: '1.0.0.0',
@@ -277,7 +299,7 @@ export async function deployWithArmRestApi(
     })),
   };
 
-  // 2. Trigger ARM Deployment PUT
+  // 3. Trigger ARM Deployment PUT
   const deployUrl = `https://management.azure.com/subscriptions/${subscriptionId}/resourcegroups/${resourceGroup}/providers/Microsoft.Resources/deployments/${deploymentName}?api-version=2021-04-01`;
   const proxyUrl = deployUrl.replace('https://management.azure.com', '/api/azure-arm');
 
@@ -369,6 +391,24 @@ export async function whatIfWithArmRestApi(
 
   const token = session.token.access_token;
   const deploymentName = `whatif-${Date.now()}`;
+
+  // Ensure Azure Resource Group exists before running What-If
+  const rgUrl = `https://management.azure.com/subscriptions/${subscriptionId}/resourcegroups/${resourceGroup}?api-version=2021-04-01`;
+  const rgProxyUrl = rgUrl.replace('https://management.azure.com', '/api/azure-arm');
+  try {
+    await fetch(rgProxyUrl, {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        location: region,
+      }),
+    });
+  } catch (e) {
+    console.warn('What-If resource group notice:', e);
+  }
 
   const armTemplate = {
     $schema: 'https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#',
