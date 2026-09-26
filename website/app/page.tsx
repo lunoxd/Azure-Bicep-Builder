@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Download, Layers, FolderDown, ExternalLink } from 'lucide-react';
 import Prism from './components/Prism';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from './components/ui/tabs';
@@ -19,7 +19,7 @@ const WindowsIcon = ({ size = 16 }: { size?: number }) => (
 
 const LinuxIcon = ({ size = 16 }: { size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
-    <path d="M12.002 2c-2.38 0-4.31 1.93-4.31 4.31 0 1.24.52 2.36 1.36 3.14-.07.41-.12.83-.12 1.26 0 1.83.69 3.51 1.83 4.8-1.57.85-2.76 2.39-3.09 4.24-.13.73.43 1.38 1.17 1.38h10.32c.74 0 1.3-.65 1.17-1.38-.33-1.85-1.52-3.39-3.09-4.24 1.14-1.29 1.83-2.97 1.83-4.8 0-.43-.05-.85-.12-1.26.84-.78 1.36-1.9 1.36-3.14 0-2.38-1.93-4.31-4.31-4.31zm-1.5 4.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm3 0a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/>
+    <path d="M12.016 0c-3.15 0-5.44 2.454-5.44 5.82 0 1.542.457 3.013 1.154 4.098C6.96 11.232 6 13.064 6 15.312c0 2.825 1.583 5.067 3.86 5.92-.08.38-.13.78-.13 1.19 0 .87.71 1.578 1.58 1.578h1.38c.64 0 1.21-.383 1.46-.967.24.584.81.967 1.45.967h1.38c.87 0 1.58-.708 1.58-1.578 0-.41-.05-.81-.13-1.19 2.27-.853 3.86-3.095 3.86-5.92 0-2.248-.96-4.08-1.73-5.394.7-1.085 1.15-2.556 1.15-4.098C20.46 2.454 18.17 0 15.02 0h-3.004zm-1.04 4.54c.48 0 .87.48.87 1.07 0 .59-.39 1.07-.87 1.07-.48 0-.87-.48-.87-1.07 0-.59.39-1.07.87-1.07zm4.08 0c.48 0 .87.48.87 1.07 0 .59-.39 1.07-.87 1.07-.48 0-.87-.48-.87-1.07 0-.59.39-1.07.87-1.07zm-2.04 2.1c.96 0 1.63.48 1.63 1.07 0 .59-.67 1.07-1.63 1.07-.96 0-1.63-.48-1.63-1.07 0-.59.67-1.07 1.63-1.07z" />
   </svg>
 );
 
@@ -29,8 +29,26 @@ const GithubIcon = ({ size = 16 }: { size?: number }) => (
   </svg>
 );
 
+const StarIcon = ({ size = 12 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="#eab308" stroke="#eab308" strokeWidth="1">
+    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+  </svg>
+);
+
 export default function HomePage() {
   const [activeTab, setActiveTab] = useState<'macos' | 'windows' | 'linux'>('macos');
+  const [stars, setStars] = useState<number | null>(null);
+
+  useEffect(() => {
+    fetch('https://api.github.com/repos/lunoxd/Azure-Bicep-Builder')
+      .then((res) => res.json())
+      .then((data) => {
+        if (typeof data.stargazers_count === 'number') {
+          setStars(data.stargazers_count);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   return (
     <div className="landing-container">
@@ -49,10 +67,14 @@ export default function HomePage() {
               href="https://github.com/lunoxd/Azure-Bicep-Builder"
               target="_blank"
               rel="noreferrer"
-              className="nav-link"
-              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+              className="nav-github-btn"
             >
-              <GithubIcon size={15} /> GitHub
+              <GithubIcon size={16} />
+              <span>GitHub</span>
+              <span className="nav-github-stars">
+                <StarIcon size={11} />
+                <span>{stars !== null ? stars : '★'}</span>
+              </span>
             </a>
 
             <a href="#downloads" className="btn-nav-download">
