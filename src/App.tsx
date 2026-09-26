@@ -3,6 +3,7 @@ import { Sidebar } from './components/layout/Sidebar';
 import { Header } from './components/layout/Header';
 import { Dashboard } from './components/dashboard/Dashboard';
 import { VisualBuilder } from './components/builder/VisualBuilder';
+import { LoginScreen } from './components/auth/LoginScreen';
 import { AppleSpinner } from './components/common/AppleSpinner';
 import { RegionReplicationModal } from './components/replicate/RegionReplicationModal';
 import { NewEnvironmentModal } from './components/environments/NewEnvironmentModal';
@@ -24,41 +25,51 @@ import type { Environment } from './types';
 import { v4 as uuidv4 } from 'uuid';
 
 export const App: React.FC = () => {
-  const { setLoginStatus, setSelectedSubscription, setCliInstalled } = useAzureStore();
+  const { loginStatus, setLoginStatus, setSelectedSubscription, setCliInstalled } = useAzureStore();
   const { currentEnvironment, setCurrentEnvironment, setEnvironments, environments, viewMode } = useEnvironmentStore();
   const { activeNav } = useUIStore();
 
+  const [isCheckingAuth, setIsCheckingAuth] = useState<boolean>(true);
   const [newEnvModalOpen, setNewEnvModalOpen] = useState<boolean>(false);
 
   // Initial check of Azure in-app session & CLI login state on startup
   useEffect(() => {
-    checkAzCli().then((installed) => setCliInstalled(installed));
-    
-    // Check saved in-app OAuth session first
-    import('./services/azureAuth').then(({ getSavedAuthSession }) => {
-      const saved = getSavedAuthSession();
-      if (saved) {
-        setLoginStatus({
-          loggedIn: true,
-          account: saved.account,
-          subscriptions: saved.subscriptions,
-        });
-        if (saved.subscriptions.length > 0) {
-          setSelectedSubscription(saved.subscriptions[0]);
-        }
-        return;
-      }
+    const init = async () => {
+      try {
+        const cliInstalled = await checkAzCli();
+        setCliInstalled(cliInstalled);
 
-      // If no saved in-app session, check native Azure CLI
-      checkLoginStatus().then((status) => {
+        // Check saved in-app OAuth session first
+        const { getSavedAuthSession } = await import('./services/azureAuth');
+        const saved = getSavedAuthSession();
+        if (saved) {
+          setLoginStatus({
+            loggedIn: true,
+            account: saved.account,
+            subscriptions: saved.subscriptions,
+          });
+          if (saved.subscriptions.length > 0) {
+            setSelectedSubscription(saved.subscriptions[0]);
+          }
+          return;
+        }
+
+        // If no saved in-app session, check native Azure CLI
+        const status = await checkLoginStatus();
         if (status.loggedIn) {
           setLoginStatus(status);
           if (status.subscriptions.length > 0) {
             setSelectedSubscription(status.subscriptions[0]);
           }
         }
-      });
-    });
+      } catch (e) {
+        console.error('Failed to initialize Azure auth state:', e);
+      } finally {
+        setIsCheckingAuth(false);
+      }
+    };
+
+    init();
 
     // Seed default environment if none exists for quick exploration
     if (environments.length === 0) {
@@ -93,6 +104,24 @@ export const App: React.FC = () => {
     }
   }, []);
 
+  // 1. Initial auth validation loader
+  if (isCheckingAuth) {
+    return (
+      <div className="auth-gate-container">
+        <div className="auth-loading-box">
+          <AppleSpinner size={36} color="#38bdf8" />
+          <p className="auth-loading-text">Connecting to Azure session...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 2. Strict Auth Gate: If not authenticated, ONLY render LoginScreen
+  if (!loginStatus.loggedIn) {
+    return <LoginScreen />;
+  }
+
+  // 3. Authenticated App Layout
   const renderContent = () => {
     if (activeNav === 'dashboard') {
       return <Dashboard onNewEnv={() => setNewEnvModalOpen(true)} />;
@@ -158,8 +187,9 @@ export const App: React.FC = () => {
         <main className="app-content">
           <Suspense
             fallback={
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', minHeight: '300px' }}>
-                <AppleSpinner size={32} />
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', minHeight: '300px', gap: '12px', color: '#949ba4', fontSize: '13px' }}>
+                <AppleSpinner size={28} color="#38bdf8" />
+                <span>Loading view...</span>
               </div>
             }
           >

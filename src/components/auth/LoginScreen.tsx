@@ -1,15 +1,89 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAzureStore } from '../../stores';
-import { azureLogin } from '../../hooks/useTauri';
-import { ShieldCheck, LogIn, AlertCircle } from 'lucide-react';
+import { azureLogin, checkAzCli } from '../../hooks/useTauri';
+import {
+  requestDeviceCode,
+  pollDeviceCodeToken,
+  fetchAzureSubscriptions,
+  saveAuthSession,
+  type DeviceCodeResponse,
+} from '../../services/azureAuth';
+import {
+  Layers,
+  ShieldCheck,
+  AlertCircle,
+  Zap,
+  Terminal,
+  Copy,
+  Check,
+  ExternalLink,
+} from 'lucide-react';
 import { AppleSpinner } from '../common/AppleSpinner';
 
-export const LoginScreen: React.FC<{ onSkip?: () => void }> = ({ onSkip }) => {
-  const { setLoginStatus, setSelectedSubscription, loading, setLoading, error, setError } = useAzureStore();
+export const LoginScreen: React.FC = () => {
+  const {
+    setLoginStatus,
+    setSelectedSubscription,
+    loading,
+    setLoading,
+    error,
+    setError,
+    setCliInstalled,
+  } = useAzureStore();
 
-  const handleLogin = async () => {
+  const [deviceInfo, setDeviceInfo] = useState<DeviceCodeResponse | null>(null);
+  const [deviceStatus, setDeviceStatus] = useState<string>('');
+  const [copiedCode, setCopiedCode] = useState(false);
+  const [isCliLoggingIn, setIsCliLoggingIn] = useState(false);
+
+  useEffect(() => {
+    setError(null);
+    checkAzCli().then((installed) => setCliInstalled(installed));
+  }, []);
+
+  const handleStartInAppAuth = async () => {
     try {
       setLoading(true);
+      setError(null);
+      setDeviceStatus('Requesting Microsoft authorization code...');
+
+      const devCode = await requestDeviceCode();
+      setDeviceInfo(devCode);
+      setDeviceStatus('Enter code in browser and authorize Microsoft access.');
+
+      window.open(devCode.verification_uri, '_blank');
+
+      const token = await pollDeviceCodeToken(
+        devCode.device_code,
+        devCode.interval || 5,
+        devCode.expires_in || 900,
+        (msg) => setDeviceStatus(msg)
+      );
+
+      const { account, subscriptions } = await fetchAzureSubscriptions(token.access_token);
+      saveAuthSession(token, account, subscriptions);
+
+      setLoginStatus({
+        loggedIn: true,
+        account,
+        subscriptions,
+      });
+
+      if (subscriptions.length > 0) {
+        setSelectedSubscription(subscriptions[0]);
+      }
+
+      setDeviceInfo(null);
+    } catch (err: any) {
+      setError(err?.message || err?.toString() || 'Microsoft login encountered an error.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCliLogin = async () => {
+    try {
+      setIsCliLoggingIn(true);
       setError(null);
       const status = await azureLogin();
       setLoginStatus(status);
@@ -19,42 +93,148 @@ export const LoginScreen: React.FC<{ onSkip?: () => void }> = ({ onSkip }) => {
     } catch (err: any) {
       setError(err?.toString() || 'Failed to authenticate with Azure CLI');
     } finally {
-      setLoading(false);
+      setIsCliLoggingIn(false);
     }
   };
 
+  const handleCopyCode = () => {
+    if (deviceInfo?.user_code) {
+      navigator.clipboard.writeText(deviceInfo.user_code);
+      setCopiedCode(true);
+      setTimeout(() => setCopiedCode(false), 2500);
+    }
+  };
+
+  const isAnyLoading = loading || isCliLoggingIn;
+
   return (
-    <div className="login-screen">
-      <div style={{ width: '48px', height: '48px', borderRadius: '8px', background: '#18181b', border: '1px solid #27272a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <ShieldCheck size={28} color="#10b981" />
-      </div>
-      <h2>Connect to Microsoft Azure</h2>
-      <p>
-        Azure Bicep Builder (ABB) operates local-first. We authenticate directly through your official Azure CLI
-        session without ever storing passwords or client secrets.
-      </p>
-
-      {error && (
-        <div className="badge badge-error" style={{ padding: '8px 14px', fontSize: 'var(--text-xs)', maxWidth: '440px' }}>
-          <AlertCircle size={14} /> {error}
+    <div className="auth-gate-container">
+      <div className="auth-gate-card">
+        {/* Brand Icon & Heading */}
+        <div className="auth-gate-header">
+          <div className="auth-gate-logo">
+            <Layers size={28} strokeWidth={2.2} color="#38bdf8" />
+          </div>
+          <h1 className="auth-gate-title">Azure Bicep Builder</h1>
+          <p className="auth-gate-subtitle">
+            Sign in with Microsoft Azure to visually design topologies, inspect live cloud spending,
+            and deploy infrastructure with zero drift.
+          </p>
         </div>
-      )}
 
-      <div style={{ display: 'flex', gap: '10px', marginTop: '8px' }}>
-        <button className="btn btn-primary btn-lg" onClick={handleLogin} disabled={loading}>
-          {loading ? <AppleSpinner size={16} /> : <LogIn size={16} />}
-          {loading ? 'Authenticating in browser...' : 'Sign in with Azure CLI'}
-        </button>
-
-        {onSkip && (
-          <button className="btn btn-secondary btn-lg" onClick={onSkip}>
-            Offline Mode
-          </button>
+        {/* Error Notification */}
+        {error && (
+          <div className="auth-error-banner">
+            <AlertCircle size={16} className="auth-error-icon" />
+            <span className="auth-error-text">{error}</span>
+          </div>
         )}
-      </div>
 
-      <div style={{ marginTop: '16px', fontSize: '11px', color: 'var(--text-tertiary)', maxWidth: '380px', lineHeight: 1.5 }}>
-        Requires Azure CLI (<code>az</code>) installed on your system.
+        {/* Device Code Flow Active Screen */}
+        {deviceInfo ? (
+          <div className="auth-device-box">
+            <div className="auth-device-step">
+              <span className="auth-step-number">1</span>
+              <span>Copy your one-time Microsoft authorization code:</span>
+            </div>
+
+            <div className="auth-code-wrapper">
+              <span className="auth-user-code">{deviceInfo.user_code}</span>
+              <button
+                type="button"
+                className="btn-auth-copy"
+                onClick={handleCopyCode}
+                title="Copy code"
+              >
+                {copiedCode ? (
+                  <>
+                    <Check size={14} color="#10b981" />
+                    <span style={{ color: '#10b981' }}>Copied!</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy size={14} />
+                    <span>Copy</span>
+                  </>
+                )}
+              </button>
+            </div>
+
+            <div className="auth-device-step" style={{ marginTop: '14px' }}>
+              <span className="auth-step-number">2</span>
+              <span>Complete authentication in your browser:</span>
+            </div>
+
+            <a
+              href={deviceInfo.verification_uri}
+              target="_blank"
+              rel="noreferrer"
+              className="btn-auth-browser"
+            >
+              <span>Open Microsoft Login Page</span>
+              <ExternalLink size={14} />
+            </a>
+
+            <div className="auth-polling-status">
+              <AppleSpinner size={14} color="#38bdf8" />
+              <span>{deviceStatus || 'Waiting for browser approval...'}</span>
+            </div>
+          </div>
+        ) : (
+          /* Main Action Buttons */
+          <div className="auth-actions-group">
+            {/* 1. Primary: 1-Click Microsoft In-App OAuth */}
+            <button
+              type="button"
+              className="btn-auth-primary"
+              onClick={handleStartInAppAuth}
+              disabled={isAnyLoading}
+            >
+              {loading ? (
+                <>
+                  <AppleSpinner size={18} color="#ffffff" />
+                  <span>Connecting to Microsoft...</span>
+                </>
+              ) : (
+                <>
+                  <Zap size={18} color="#38bdf8" />
+                  <span>Sign in with Microsoft Azure</span>
+                </>
+              )}
+            </button>
+
+            {/* Divider */}
+            <div className="auth-divider">
+              <span>or</span>
+            </div>
+
+            {/* 2. Secondary: Native Azure CLI */}
+            <button
+              type="button"
+              className="btn-auth-secondary"
+              onClick={handleCliLogin}
+              disabled={isAnyLoading}
+            >
+              {isCliLoggingIn ? (
+                <>
+                  <AppleSpinner size={16} />
+                  <span>Launching Azure CLI...</span>
+                </>
+              ) : (
+                <>
+                  <Terminal size={16} />
+                  <span>Sign in via Azure CLI (`az login`)</span>
+                </>
+              )}
+            </button>
+          </div>
+        )}
+
+        {/* Security & Local-First Footer Badge */}
+        <div className="auth-security-footer">
+          <ShieldCheck size={14} color="#10b981" />
+          <span>Local-first architecture. Official Microsoft OAuth session without storing credentials.</span>
+        </div>
       </div>
     </div>
   );
