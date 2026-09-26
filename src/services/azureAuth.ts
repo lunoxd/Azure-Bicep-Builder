@@ -97,10 +97,19 @@ export async function armRequest(
     token?: string;
     body?: any;
     headers?: Record<string, string>;
+    _retried?: boolean;
   } = {}
 ): Promise<ArmFetchResponse> {
   const method = (options.method || 'GET').toUpperCase();
-  const token = options.token || getSavedAuthSession()?.token?.access_token;
+  // Use the provided token or get a valid (auto-refreshed) one from the session
+  let token = options.token;
+  if (!token) {
+    try {
+      token = await getValidToken();
+    } catch {
+      token = getSavedAuthSession()?.token?.access_token;
+    }
+  }
   const rawBody = options.body
     ? typeof options.body === 'string'
       ? options.body
@@ -122,6 +131,15 @@ export async function armRequest(
         }
       );
 
+      // On 401 from Tauri, try to refresh token and retry once
+      if (response.status === 401 && !options._retried) {
+        try {
+          const refreshed = await getValidToken();
+          return armRequest(url, { ...options, token: refreshed, _retried: true });
+        } catch {
+          // fall through to return the 401
+        }
+      }
       return {
         ok: response.ok,
         status: response.status,
@@ -155,6 +173,15 @@ export async function armRequest(
 
   try {
     const res = await fetch(proxyUrl, fetchOptions);
+    // On 401 in browser, try token refresh and retry once
+    if (res.status === 401 && !options._retried) {
+      try {
+        const refreshed = await getValidToken();
+        return armRequest(url, { ...options, token: refreshed, _retried: true });
+      } catch {
+        // fall through
+      }
+    }
     return {
       ok: res.ok,
       status: res.status,
@@ -165,6 +192,14 @@ export async function armRequest(
   } catch {
     // 3. Final direct fetch attempt
     const res = await fetch(url, fetchOptions);
+    if (res.status === 401 && !options._retried) {
+      try {
+        const refreshed = await getValidToken();
+        return armRequest(url, { ...options, token: refreshed, _retried: true });
+      } catch {
+        // fall through
+      }
+    }
     return {
       ok: res.ok,
       status: res.status,
@@ -575,12 +610,8 @@ export async function deployWithArmRestApi(
   region: string,
   resources: any[]
 ): Promise<any> {
-  const session = getSavedAuthSession();
-  if (!session?.token?.access_token) {
-    throw new Error('Not authenticated with Azure. Please sign in first.');
-  }
-
-  const token = session.token.access_token;
+  // Always get a valid (auto-refreshed) token before deployment
+  const token = await getValidToken();
   const deploymentName = `bicep-studio-${Date.now()}`;
 
   // 1. Ensure Azure Resource Group exists first
@@ -600,7 +631,8 @@ export async function deployWithArmRestApi(
   }
 
   // 2. Build sanitized ARM JSON template from resources
-  const armTemplate = buildArmTemplate(resources, region, session.account?.tenantId);
+  const tenantId = getSavedAuthSession()?.account?.tenantId;
+  const armTemplate = buildArmTemplate(resources, region, tenantId);
 
   // 3. Trigger ARM Deployment PUT
   const deployUrl = `https://management.azure.com/subscriptions/${subscriptionId}/resourcegroups/${resourceGroup}/providers/Microsoft.Resources/deployments/${deploymentName}?api-version=2021-04-01`;
@@ -703,12 +735,7 @@ export async function deleteResourceGroupViaArm(
     }
   }
 
-  const session = getSavedAuthSession();
-  if (!session?.token?.access_token) {
-    throw new Error('Not authenticated with Azure. Please sign in first.');
-  }
-
-  const token = session.token.access_token;
+  const token = await getValidToken();
   const deleteUrl = `https://management.azure.com/subscriptions/${subscriptionId}/resourcegroups/${resourceGroup}?api-version=2021-04-01`;
 
   const res = await armRequest(deleteUrl, {
@@ -740,12 +767,7 @@ export async function whatIfWithArmRestApi(
   region: string,
   resources: any[]
 ): Promise<any> {
-  const session = getSavedAuthSession();
-  if (!session?.token?.access_token) {
-    throw new Error('Not authenticated with Azure. Please sign in first.');
-  }
-
-  const token = session.token.access_token;
+  const token = await getValidToken();
   const deploymentName = `whatif-${Date.now()}`;
 
   // Ensure Azure Resource Group exists before running What-If
@@ -760,7 +782,8 @@ export async function whatIfWithArmRestApi(
     console.warn('What-If resource group notice:', e);
   }
 
-  const armTemplate = buildArmTemplate(resources, region, session.account?.tenantId);
+  const tenantId = getSavedAuthSession()?.account?.tenantId;
+  const armTemplate = buildArmTemplate(resources, region, tenantId);
   const whatIfUrl = `https://management.azure.com/subscriptions/${subscriptionId}/resourcegroups/${resourceGroup}/providers/Microsoft.Resources/deployments/${deploymentName}/whatIf?api-version=2021-04-01`;
 
   const res = await armRequest(whatIfUrl, {
@@ -804,15 +827,20 @@ export function saveAuthSession(token: TokenResponse, account: AzureAccount, sub
 }
 
 /**
- * Retrieve saved auth session
+ * Retrieve saved auth session (never returns expired sessions without refresh_token)
  */
 export function getSavedAuthSession(): StoredAuthSession | null {
   try {
     const item = localStorage.getItem(STORAGE_KEY_AUTH);
     if (!item) return null;
     const session: StoredAuthSession = JSON.parse(item);
-    // Keep session if not expired (or within generous window)
-    if (session.expiresAt && Date.now() > session.expiresAt + 86400000) {
+    // Hard-expire sessions that have no refresh_token and are truly expired
+    if (session.expiresAt && Date.now() > session.expiresAt && !session.token.refresh_token) {
+      localStorage.removeItem(STORAGE_KEY_AUTH);
+      return null;
+    }
+    // Remove sessions that are too old even with a refresh token (7 days)
+    if (session.expiresAt && Date.now() > session.expiresAt + 7 * 24 * 3600 * 1000) {
       localStorage.removeItem(STORAGE_KEY_AUTH);
       return null;
     }
@@ -820,6 +848,61 @@ export function getSavedAuthSession(): StoredAuthSession | null {
   } catch {
     return null;
   }
+}
+
+/**
+ * Refresh an expired access token using the stored refresh_token
+ */
+export async function refreshAccessToken(refreshToken: string): Promise<TokenResponse> {
+  const tokenUrl = `https://login.microsoftonline.com/${TENANT}/oauth2/v2.0/token`;
+  const data = await postForm(tokenUrl, {
+    grant_type: 'refresh_token',
+    client_id: AZURE_CLI_CLIENT_ID,
+    refresh_token: refreshToken,
+    scope: 'https://management.azure.com/.default offline_access openid profile email',
+  });
+
+  if (data.error) {
+    throw new Error(data.error_description || data.error);
+  }
+  if (!data.access_token) {
+    throw new Error('Token refresh failed: no access_token returned.');
+  }
+  return data;
+}
+
+/**
+ * Get a valid (non-expired) access token, refreshing proactively if within 5 minutes of expiry.
+ * Updates localStorage with the refreshed token automatically.
+ */
+export async function getValidToken(): Promise<string> {
+  const session = getSavedAuthSession();
+  if (!session) {
+    throw new Error('Not authenticated with Azure. Please sign in first.');
+  }
+
+  const REFRESH_THRESHOLD_MS = 5 * 60 * 1000; // 5 minutes before expiry
+  const needsRefresh = session.expiresAt && (Date.now() >= session.expiresAt - REFRESH_THRESHOLD_MS);
+
+  if (needsRefresh && session.token.refresh_token) {
+    try {
+      console.info('Azure access token near/past expiry — refreshing automatically...');
+      const newToken = await refreshAccessToken(session.token.refresh_token);
+      // Persist refreshed token
+      saveAuthSession(newToken, session.account, session.subscriptions);
+      return newToken.access_token;
+    } catch (refreshErr) {
+      console.warn('Silent token refresh failed:', refreshErr);
+      // If refresh fails and token is hard-expired, force re-auth
+      if (session.expiresAt && Date.now() > session.expiresAt) {
+        localStorage.removeItem(STORAGE_KEY_AUTH);
+        throw new Error('Azure session expired and refresh failed. Please sign in again.');
+      }
+      // Token still within expiry window — use existing token
+    }
+  }
+
+  return session.token.access_token;
 }
 
 /**
@@ -927,9 +1010,9 @@ export async function deleteResourceByIdViaArm(
     }
   }
 
-  const token = accessToken || getSavedAuthSession()?.token?.access_token;
+  let token = accessToken;
   if (!token) {
-    throw new Error('Not authenticated with Azure. Please sign in first.');
+    token = await getValidToken();
   }
 
   const detectedType = resourceType || extractResourceTypeFromId(resourceId);
