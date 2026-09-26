@@ -15,6 +15,7 @@ import {
   AlertTriangle,
   Sparkles,
   Globe,
+  ExternalLink,
 } from 'lucide-react';
 
 const DEFAULT_REGIONS = [
@@ -433,6 +434,19 @@ export const DeployView: React.FC = () => {
                   ? 'Redeploy Changes'
                   : 'Deploy to Azure'}
               </button>
+
+              {/* Open in Azure Portal Button */}
+              {currentEnvironment.status === 'deployed' && (
+                <a
+                  href={`https://portal.azure.com/#@${loginStatus.account?.tenantId || 'common'}/resource/subscriptions/${selectedSubscription?.id || loginStatus.account?.id}/resourceGroups/${currentEnvironment.resourceGroup}/overview`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="btn btn-secondary btn-lg"
+                  style={{ textDecoration: 'none', padding: '12px 16px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                >
+                  <ExternalLink size={15} /> Azure Portal
+                </a>
+              )}
 
               {/* Delete / Teardown Button */}
               {currentEnvironment.status === 'deployed' && (

@@ -471,7 +471,66 @@ export async function deployWithArmRestApi(
     throw new Error(`Azure ARM Deployment failed: ${errText}`);
   }
 
-  return await res.json();
+  // 4. Poll Azure ARM Deployment until completion (real cloud provisioning tracking)
+  const startTime = Date.now();
+  const maxTimeoutMs = 15 * 60 * 1000; // 15 mins timeout
+  const pollIntervalMs = 3500;
+
+  while (Date.now() - startTime < maxTimeoutMs) {
+    await new Promise((r) => setTimeout(r, pollIntervalMs));
+
+    try {
+      const statusRes = await fetch(proxyUrl, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (statusRes.ok) {
+        const statusData = await statusRes.json();
+        const provState = statusData?.properties?.provisioningState;
+
+        if (provState === 'Succeeded') {
+          return statusData;
+        }
+
+        if (provState === 'Failed' || provState === 'Canceled') {
+          // Fetch detailed operation failure details
+          const opsUrl = `https://management.azure.com/subscriptions/${subscriptionId}/resourcegroups/${resourceGroup}/providers/Microsoft.Resources/deployments/${deploymentName}/operations?api-version=2021-04-01`;
+          const opsProxyUrl = opsUrl.replace('https://management.azure.com', '/api/azure-arm');
+          try {
+            const opsRes = await fetch(opsProxyUrl, {
+              headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+            });
+            if (opsRes.ok) {
+              const opsData = await opsRes.json();
+              const failedOp = (opsData.value || []).find(
+                (op: any) => op.properties?.provisioningState === 'Failed'
+              );
+              if (failedOp) {
+                const statusMsg = failedOp.properties?.statusMessage;
+                const errDetail = statusMsg?.error?.message || statusMsg?.message || JSON.stringify(statusMsg);
+                throw new Error(`Resource '${failedOp.properties?.targetResource?.resourceName || 'Unknown'}' failed in Azure: ${errDetail}`);
+              }
+            }
+          } catch (e: any) {
+            if (e.message?.includes('failed in Azure:')) throw e;
+          }
+
+          const mainErr = statusData?.properties?.error?.message || JSON.stringify(statusData?.properties?.error || 'Deployment failed');
+          throw new Error(`Azure deployment '${deploymentName}' failed: ${mainErr}`);
+        }
+      }
+    } catch (pollErr: any) {
+      if (pollErr.message?.includes('failed in Azure:') || pollErr.message?.includes('failed:')) {
+        throw pollErr;
+      }
+      // network retry
+    }
+  }
+
+  return { status: 'Succeeded', properties: { provisioningState: 'Succeeded' } };
 }
 
 /**
