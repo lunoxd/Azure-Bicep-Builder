@@ -684,22 +684,90 @@ select.input {
 }
 
 .dashboard-hero {
-  margin-bottom: 36px;
+  margin-bottom: 28px;
 }
 
-.dashboard-hero h2 {
-  font-size: var(--text-3xl);
+.dashboard-header-open {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.dashboard-header-title {
+  font-size: 34px;
   font-weight: 800;
   color: #fafafa;
-  letter-spacing: -0.02em;
-  margin-bottom: 8px;
+  margin: 0;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
 }
 
-.dashboard-hero p {
-  font-size: var(--text-base);
-  color: var(--text-secondary);
-  max-width: 680px;
-  line-height: 1.6;
+.dashboard-money-card {
+  background: linear-gradient(135deg, #13141c 0%, #161826 50%, #10121a 100%);
+  border: 1px solid #27283c;
+  border-radius: 16px;
+  padding: 24px 28px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 20px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.dashboard-money-card::after {
+  content: '';
+  position: absolute;
+  top: -40px;
+  right: -40px;
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, rgba(59, 130, 246, 0) 70%);
+  pointer-events: none;
+}
+
+.dashboard-metrics-box {
+  background: #121215;
+  border: 1px solid #27272a;
+  border-radius: 14px;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  margin-bottom: 28px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.dashboard-metric-cell {
+  padding: 22px 24px;
+  border-right: 1px solid #27272a;
+  transition: background 150ms ease;
+}
+
+.dashboard-metric-cell:last-child {
+  border-right: none;
+}
+
+.dashboard-metric-cell:hover {
+  background: #16161b;
+}
+
+@media (max-width: 900px) {
+  .dashboard-metrics-box {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .dashboard-metric-cell:nth-child(2) {
+    border-right: none;
+  }
+  .dashboard-metric-cell:nth-child(1),
+  .dashboard-metric-cell:nth-child(2) {
+    border-bottom: 1px solid #27272a;
+  }
 }
 
 .dashboard-grid {
