@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import {
-
   Download,
   Layers,
   Code2,
@@ -22,8 +21,10 @@ import {
   FolderDown,
   FileCode,
 } from 'lucide-react';
+import Prism from './components/Prism';
 
 const GithubIcon = ({ size = 16 }: { size?: number }) => (
+
   <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
     <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
   </svg>
@@ -162,124 +163,141 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
         </div>
       </header>
 
-      {/* Hero Section */}
-      <section className="hero">
-        <div className="hero-badge">
-          <span className="hero-badge-tag">v0.1.0 Release</span>
-          <span>Open Source Local-First Architecture Studio</span>
+      {/* Hero Section with 3D WebGL Prism */}
+      <div className="hero-wrapper">
+        <div className="hero-prism-bg">
+          <Prism
+            animationType="hover"
+            glow={1.2}
+            bloom={1.1}
+            scale={3.5}
+            hoverStrength={1.8}
+            noise={0.25}
+            timeScale={0.5}
+            transparent={true}
+          />
         </div>
 
-        <h1 className="hero-title">
-          Visual Cloud Architecture<br />
-          <span className="hero-title-gradient">Meets Real Azure Bicep</span>
-        </h1>
+        <section className="hero">
+          <div className="hero-content">
+            <div className="hero-badge">
+              <span className="hero-badge-tag">v0.1.0 Release</span>
+              <span>Open Source Local-First Architecture Studio</span>
+            </div>
 
-        <p className="hero-subtitle">
-          Design topologies visually, generate production-grade Azure Bicep code with zero drift,
-          inspect live cloud spending & credits, and deploy directly to Microsoft Azure with 1-click.
-        </p>
+            <h1 className="hero-title">
+              Visual Cloud Architecture<br />
+              <span className="hero-title-gradient">Meets Real Azure Bicep</span>
+            </h1>
 
-        {/* Download Group */}
-        <div className="download-group-container" id="downloads">
-          <div className="download-tabs">
-            <button
-              className={`download-tab ${activeTab === 'macos' ? 'active' : ''}`}
-              onClick={() => setActiveTab('macos')}
-            >
-              <Cpu size={16} /> macOS (Apple Silicon & Intel)
-            </button>
-            <button
-              className={`download-tab ${activeTab === 'windows' ? 'active' : ''}`}
-              onClick={() => setActiveTab('windows')}
-            >
-              <Terminal size={16} /> Windows (x64 / ARM64)
-            </button>
-            <button
-              className={`download-tab ${activeTab === 'linux' ? 'active' : ''}`}
-              onClick={() => setActiveTab('linux')}
-            >
-              <Server size={16} /> Linux / Source
-            </button>
+            <p className="hero-subtitle">
+              Design topologies visually, generate production-grade Azure Bicep code with zero drift,
+              inspect live cloud spending & credits, and deploy directly to Microsoft Azure with 1-click.
+            </p>
+
+            {/* Download Group */}
+            <div className="download-group-container" id="downloads">
+              <div className="download-tabs">
+                <button
+                  className={`download-tab ${activeTab === 'macos' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('macos')}
+                >
+                  <Cpu size={16} /> macOS (Apple Silicon & Intel)
+                </button>
+                <button
+                  className={`download-tab ${activeTab === 'windows' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('windows')}
+                >
+                  <Terminal size={16} /> Windows (x64 / ARM64)
+                </button>
+                <button
+                  className={`download-tab ${activeTab === 'linux' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('linux')}
+                >
+                  <Server size={16} /> Linux / Source
+                </button>
+              </div>
+
+              <div className="download-cards-grid">
+                {activeTab === 'macos' && (
+                  <>
+                    <a
+                      href="/downloads/Azure-Bicep-Builder-macOS.dmg"
+                      download
+                      className="btn-download-primary"
+                    >
+                      <Download size={18} /> Download macOS .DMG (4.1 MB)
+                    </a>
+                    <a
+                      href="/downloads/Azure-Bicep-Builder-macOS.zip"
+                      download
+                      className="btn-download-secondary"
+                    >
+                      <FolderDown size={18} /> Download macOS .ZIP (3.9 MB)
+                    </a>
+                  </>
+                )}
+
+                {activeTab === 'windows' && (
+                  <>
+                    <a
+                      href="https://github.com/lunoxd/Azure-Bicep-Builder/releases"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="btn-download-primary"
+                    >
+                      <Download size={18} /> Windows 64-bit Installer (.exe)
+                    </a>
+                    <a
+                      href="https://github.com/lunoxd/Azure-Bicep-Builder/releases"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="btn-download-secondary"
+                    >
+                      <ExternalLink size={16} /> GitHub Windows Releases
+                    </a>
+                  </>
+                )}
+
+                {activeTab === 'linux' && (
+                  <>
+                    <a
+                      href="https://github.com/lunoxd/Azure-Bicep-Builder/releases"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="btn-download-primary"
+                    >
+                      <Download size={18} /> Linux .AppImage / .deb
+                    </a>
+                    <a
+                      href="https://github.com/lunoxd/Azure-Bicep-Builder"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="btn-download-secondary"
+                    >
+                      <GithubIcon size={16} /> Build from Source (Cargo + Vite)
+                    </a>
+                  </>
+                )}
+              </div>
+
+              <div className="hero-meta">
+                <span>✨ 100% Local-first</span>
+                <span>•</span>
+                <span>🔒 No telemetry or tracker</span>
+                <span>•</span>
+                <span>⚡ Instant ARM REST & az CLI support</span>
+                <span>•</span>
+                <span>📄 MIT Licensed</span>
+              </div>
+            </div>
           </div>
-
-          <div className="download-cards-grid">
-            {activeTab === 'macos' && (
-              <>
-                <a
-                  href="/downloads/Azure-Bicep-Builder-macOS.dmg"
-                  download
-                  className="btn-download-primary"
-                >
-                  <Download size={18} /> Download macOS .DMG (4.3 MB)
-                </a>
-                <a
-                  href="/downloads/Azure-Bicep-Builder-macOS.zip"
-                  download
-                  className="btn-download-secondary"
-                >
-                  <FolderDown size={18} /> Download macOS .ZIP (4.0 MB)
-                </a>
-              </>
-            )}
-
-            {activeTab === 'windows' && (
-              <>
-                <a
-                  href="https://github.com/lunoxd/Azure-Bicep-Builder/releases"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="btn-download-primary"
-                >
-                  <Download size={18} /> Windows 64-bit Installer (.exe)
-                </a>
-                <a
-                  href="https://github.com/lunoxd/Azure-Bicep-Builder/releases"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="btn-download-secondary"
-                >
-                  <ExternalLink size={16} /> GitHub Windows Releases
-                </a>
-              </>
-            )}
-
-            {activeTab === 'linux' && (
-              <>
-                <a
-                  href="https://github.com/lunoxd/Azure-Bicep-Builder/releases"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="btn-download-primary"
-                >
-                  <Download size={18} /> Linux .AppImage / .deb
-                </a>
-                <a
-                  href="https://github.com/lunoxd/Azure-Bicep-Builder"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="btn-download-secondary"
-                >
-                  <GithubIcon size={16} /> Build from Source (Cargo + Vite)
-                </a>
-
-              </>
-            )}
-          </div>
-
-          <div className="hero-meta">
-            <span>✨ 100% Local-first</span>
-            <span>•</span>
-            <span>🔒 No telemetry or tracker</span>
-            <span>•</span>
-            <span>⚡ Instant ARM REST & az CLI support</span>
-            <span>•</span>
-            <span>📄 MIT Licensed</span>
-          </div>
-        </div>
-      </section>
+        </section>
+      </div>
 
       {/* App Interactive Preview */}
       <section className="preview-section">
+
         <div className="preview-frame">
           <div className="preview-header">
             <div className="preview-dots">
