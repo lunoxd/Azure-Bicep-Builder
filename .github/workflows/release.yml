@@ -20,6 +20,8 @@ jobs:
             args: '--target x86_64-apple-darwin'
           - platform: 'windows-latest'
             args: ''
+          - platform: 'ubuntu-22.04'
+            args: ''
 
     runs-on: ${{ matrix.platform }}
     steps:
@@ -37,6 +39,12 @@ jobs:
         with:
           targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
 
+      - name: Install Linux system dependencies
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf build-essential curl wget file libssl-dev libgtk-3-dev libayatana-appindicator3-dev
+
       - name: Install Frontend Dependencies
         run: npm ci
 
@@ -47,7 +55,7 @@ jobs:
         with:
           tagName: v__VERSION__
           releaseName: 'Azure Bicep Builder v__VERSION__'
-          releaseBody: 'Official desktop release of Azure Bicep Builder (ABB).'
-          releaseDraft: true
+          releaseBody: 'Official cross-platform desktop release of Azure Bicep Builder (macOS, Windows, Linux).'
+          releaseDraft: false
           prerelease: false
           args: ${{ matrix.args }}
