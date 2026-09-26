@@ -9,7 +9,6 @@ import {
   type DeviceCodeResponse,
 } from '../../services/azureAuth';
 import {
-  Layers,
   ShieldCheck,
   AlertCircle,
   Zap,
@@ -113,7 +112,11 @@ export const LoginScreen: React.FC = () => {
         {/* Brand Icon & Heading */}
         <div className="auth-gate-header">
           <div className="auth-gate-logo">
-            <Layers size={28} strokeWidth={2.2} color="#38bdf8" />
+            <img
+              src="/logo.png"
+              alt="Azure Bicep Builder"
+              style={{ width: 44, height: 44, objectFit: 'contain' }}
+            />
           </div>
           <h1 className="auth-gate-title">Azure Bicep Builder</h1>
           <p className="auth-gate-subtitle">

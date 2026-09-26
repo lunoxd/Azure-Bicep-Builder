@@ -29,7 +29,7 @@ export const Sidebar: React.FC = () => {
         <img
           src="/logo.png"
           alt="Azure Bicep Builder"
-          style={{ width: '28px', height: '28px', borderRadius: '6px', objectFit: 'contain' }}
+          style={{ width: '28px', height: '28px', objectFit: 'contain' }}
         />
         {!sidebarCollapsed && (
           <div className="sidebar-logo-text">

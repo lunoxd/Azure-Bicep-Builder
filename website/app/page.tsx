@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Download, Layers, FolderDown, ExternalLink } from 'lucide-react';
+import { Download, FolderDown, ExternalLink } from 'lucide-react';
 import Prism from './components/Prism';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from './components/ui/tabs';
 
@@ -79,7 +79,13 @@ export default function HomePage() {
         <nav className="landing-nav">
           <a href="#" className="nav-brand">
             <div className="nav-logo-icon">
-              <Layers size={18} strokeWidth={2.2} />
+              <img
+                src="/logo.png"
+                alt="Azure Bicep Builder"
+                width={22}
+                height={22}
+                style={{ objectFit: 'contain' }}
+              />
             </div>
             <span className="nav-brand-title">Azure Bicep Builder</span>
           </a>
