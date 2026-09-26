@@ -73,95 +73,132 @@ body {
   z-index: 1;
 }
 
-/* Navbar */
+/* Floating Pill Navbar */
+.landing-nav-wrapper {
+  position: sticky;
+  top: 18px;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  display: flex;
+  justify-content: center;
+  padding: 0 16px;
+  pointer-events: none;
+}
+
 .landing-nav {
+  pointer-events: auto;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 40px;
-  border-bottom: 1px solid var(--border-subtle);
-  background: rgba(9, 9, 11, 0.85);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  position: sticky;
-  top: 0;
-  z-index: 100;
+  width: 100%;
+  max-width: 820px;
+  height: 52px;
+  padding: 0 8px 0 18px;
+  border-radius: 9999px;
+  background: rgba(18, 18, 22, 0.72);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 
+    0 8px 32px 0 rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.15);
+  transition: all 250ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .nav-brand {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   text-decoration: none;
   color: var(--text-primary);
 }
 
-.nav-logo-box {
-  width: 36px;
-  height: 36px;
-  border-radius: 9px;
-  background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+.nav-logo-icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+  color: #ffffff;
+  transition: transform 200ms ease;
+}
+
+.nav-brand:hover .nav-logo-icon {
+  transform: rotate(15deg);
 }
 
 .nav-brand-title {
-  font-size: 16px;
-  font-weight: 800;
+  font-size: 15px;
+  font-weight: 700;
   letter-spacing: -0.02em;
   color: #ffffff;
-}
-
-.nav-brand-badge {
-  font-size: 10px;
-  background: #18181b;
-  border: 1px solid #27272a;
-  padding: 2px 7px;
-  border-radius: 9999px;
-  color: #a1a1aa;
-  font-weight: 700;
-  letter-spacing: 0.05em;
 }
 
 .nav-links {
   display: flex;
   align-items: center;
-  gap: 24px;
+  gap: 22px;
 }
 
 .nav-link {
-  color: var(--text-secondary);
+  color: #a1a1aa;
   text-decoration: none;
-  font-size: 14px;
+  font-size: 13.5px;
   font-weight: 500;
-  transition: color 150ms;
+  transition: color 150ms ease;
+  letter-spacing: -0.01em;
 }
 
 .nav-link:hover {
-  color: var(--text-primary);
+  color: #ffffff;
 }
 
 .btn-nav-download {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
   background: #ffffff;
   color: #09090b;
-  padding: 8px 18px;
-  border-radius: 8px;
+  padding: 7px 18px;
+  border-radius: 9999px;
   font-size: 13px;
   font-weight: 700;
+  letter-spacing: -0.01em;
   text-decoration: none;
-  transition: transform 150ms, box-shadow 150ms;
-  box-shadow: 0 2px 8px rgba(255, 255, 255, 0.15);
+  transition: transform 150ms ease, box-shadow 150ms ease, background-color 150ms ease;
+  box-shadow: 0 2px 8px rgba(255, 255, 255, 0.12);
 }
 
 .btn-nav-download:hover {
+  background: #f4f4f5;
   transform: translateY(-1px);
   box-shadow: 0 4px 14px rgba(255, 255, 255, 0.25);
+}
+
+@media (max-width: 640px) {
+  .landing-nav-wrapper {
+    top: 10px;
+    padding: 0 10px;
+  }
+  .landing-nav {
+    height: 48px;
+    padding: 0 6px 0 14px;
+  }
+  .nav-brand-title {
+    font-size: 13px;
+  }
+  .nav-links {
+    gap: 12px;
+  }
+  .nav-link {
+    display: none;
+  }
+  .nav-link:last-of-type {
+    display: none;
+  }
+  .btn-nav-download {
+    padding: 6px 14px;
+    font-size: 12px;
+  }
 }
 
 /* Hero Section with 3D Prism from React Bits */

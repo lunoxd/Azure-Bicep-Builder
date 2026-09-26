@@ -132,35 +132,34 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
 
   return (
     <div className="landing-container">
-      {/* Navigation */}
-      <header className="landing-nav">
-        <a href="#" className="nav-brand">
-          <div className="nav-logo-box">
-            <Layers size={20} color="#ffffff" />
-          </div>
-          <div>
+      {/* Floating Pill Navigation */}
+      <header className="landing-nav-wrapper">
+        <nav className="landing-nav">
+          <a href="#" className="nav-brand">
+            <div className="nav-logo-icon">
+              <Layers size={18} strokeWidth={2.2} />
+            </div>
             <span className="nav-brand-title">Azure Bicep Builder</span>
+          </a>
+
+          <div className="nav-links">
+            <a href="#features" className="nav-link">Features</a>
+            <a href="#blueprints" className="nav-link">Blueprints</a>
+            <a
+              href="https://github.com/lunoxd/Azure-Bicep-Builder"
+              target="_blank"
+              rel="noreferrer"
+              className="nav-link"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+            >
+              <GithubIcon size={15} /> GitHub
+            </a>
+
+            <a href="#downloads" className="btn-nav-download">
+              Download App
+            </a>
           </div>
-          <span className="nav-brand-badge">ABB v0.1.0</span>
-        </a>
-
-        <div className="nav-links">
-          <a href="#features" className="nav-link">Features</a>
-          <a href="#blueprints" className="nav-link">Blueprints</a>
-          <a
-            href="https://github.com/lunoxd/Azure-Bicep-Builder"
-            target="_blank"
-            rel="noreferrer"
-            className="nav-link"
-            style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
-          >
-            <GithubIcon size={16} /> GitHub
-          </a>
-
-          <a href="#downloads" className="btn-nav-download">
-            <Download size={14} /> Download App
-          </a>
-        </div>
+        </nav>
       </header>
 
       {/* Hero Section with 3D WebGL Prism */}
