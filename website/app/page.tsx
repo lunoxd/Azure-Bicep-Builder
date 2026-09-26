@@ -105,13 +105,13 @@ export default function HomePage() {
         <section className="hero">
           <div className="hero-content">
             <h1 className="hero-title">
-              Visual Cloud Architecture<br />
-              <span className="hero-title-gradient">Meets Real Azure Bicep</span>
+              Visual Infrastructure Studio<br />
+              <span className="hero-title-gradient">Engineered for Azure Bicep</span>
             </h1>
 
             <p className="hero-subtitle">
-              Design topologies visually, generate production-grade Azure Bicep code with zero drift,
-              inspect live cloud spending & credits, and deploy directly to Microsoft Azure with 1-click.
+              Design cloud topologies visually, auto-generate production-grade Bicep code with zero drift,
+              and deploy directly to Microsoft Azure in real-time.
             </p>
 
             {/* Download Group using shadcn Tabs */}
