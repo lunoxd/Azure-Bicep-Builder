@@ -10,10 +10,24 @@ import {
   KeyRound,
   ShieldAlert,
   Trash2,
-  MapPin,
   Layers,
   AlertTriangle,
+  Sparkles,
 } from 'lucide-react';
+
+const AZURE_REGIONS = [
+  { id: 'eastus', name: 'East US', studentRecommended: true },
+  { id: 'eastus2', name: 'East US 2', studentRecommended: true },
+  { id: 'westus2', name: 'West US 2', studentRecommended: true },
+  { id: 'westeurope', name: 'West Europe', studentRecommended: true },
+  { id: 'northeurope', name: 'North Europe', studentRecommended: true },
+  { id: 'centralus', name: 'Central US', studentRecommended: true },
+  { id: 'southcentralus', name: 'South Central US', studentRecommended: true },
+  { id: 'southeastasia', name: 'Southeast Asia', studentRecommended: true },
+  { id: 'westus', name: 'West US', studentRecommended: false },
+  { id: 'uksouth', name: 'UK South', studentRecommended: false },
+  { id: 'australiaeast', name: 'Australia East', studentRecommended: false },
+];
 
 export const DeployView: React.FC = () => {
   const { currentEnvironment, updateEnvironmentField } = useEnvironmentStore();
@@ -26,6 +40,7 @@ export const DeployView: React.FC = () => {
     currentEnvironment?.status === 'deployed' ? 'succeeded' : 'pending'
   );
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isPolicyError, setIsPolicyError] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteSuccessMsg, setDeleteSuccessMsg] = useState<string | null>(null);
@@ -51,6 +66,7 @@ export const DeployView: React.FC = () => {
       setIsDeploying(true);
       setOverallStatus('running');
       setErrorMessage(null);
+      setIsPolicyError(false);
       setDeleteSuccessMsg(null);
 
       const initialSteps: DeploymentStep[] = [
@@ -59,7 +75,7 @@ export const DeployView: React.FC = () => {
           resourceType: 'Microsoft.Resources/resourceGroups',
           status: 'running',
           timestamp: new Date().toLocaleTimeString(),
-          message: 'Validating & provisioning Azure Resource Group...',
+          message: `Validating & provisioning Azure Resource Group in '${currentEnvironment.region}'...`,
         },
         ...currentEnvironment.resources.map((res) => ({
           resourceName: res.name,
@@ -109,7 +125,14 @@ export const DeployView: React.FC = () => {
       });
     } catch (err: any) {
       setOverallStatus('failed');
-      setErrorMessage(err?.message || err?.toString() || 'Deployment failed.');
+      const errStr = err?.message || err?.toString() || 'Deployment failed.';
+      setErrorMessage(errStr);
+      
+      // Detect Azure Student/Free Tier Regional Policy restriction
+      if (errStr.includes('RequestDisallowedByAzure') || errStr.includes('best available regions')) {
+        setIsPolicyError(true);
+      }
+
       setSteps((prev) =>
         prev.map((step) =>
           step.status === 'running'
@@ -122,10 +145,19 @@ export const DeployView: React.FC = () => {
     }
   };
 
+  const handleQuickRegionSwitch = (newRegion: string) => {
+    updateEnvironmentField('region', newRegion);
+    setErrorMessage(null);
+    setIsPolicyError(false);
+    setOverallStatus('pending');
+    setSteps([]);
+  };
+
   const handleDeleteDeployment = async () => {
     try {
       setIsDeleting(true);
       setErrorMessage(null);
+      setIsPolicyError(false);
       setShowDeleteConfirm(false);
 
       await deleteDeploymentResourceGroup(
@@ -159,12 +191,12 @@ export const DeployView: React.FC = () => {
   };
 
   return (
-    <div style={{ maxWidth: '800px', margin: '0 auto', padding: '24px 20px' }}>
+    <div style={{ maxWidth: '820px', margin: '0 auto', padding: '24px 20px' }}>
       {/* Environment Summary Bar */}
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))',
           gap: '12px',
           marginBottom: '20px',
         }}
@@ -173,18 +205,46 @@ export const DeployView: React.FC = () => {
           <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontWeight: 600 }}>Environment</div>
           <div style={{ fontSize: '15px', fontWeight: 800, color: '#fafafa', marginTop: '4px' }}>{currentEnvironment.name}</div>
         </div>
+
         <div className="card" style={{ padding: '14px 16px', background: '#18181b', border: '1px solid #27272a' }}>
           <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontWeight: 600 }}>Resource Group</div>
           <div style={{ fontSize: '13px', fontWeight: 700, color: '#fafafa', marginTop: '4px', fontFamily: 'monospace' }}>
             {currentEnvironment.resourceGroup}
           </div>
         </div>
+
+        {/* Interactive Region Selector */}
         <div className="card" style={{ padding: '14px 16px', background: '#18181b', border: '1px solid #27272a' }}>
-          <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontWeight: 600 }}>Region</div>
-          <div style={{ fontSize: '14px', fontWeight: 700, color: '#10b981', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <MapPin size={14} /> {currentEnvironment.region}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontWeight: 600 }}>Deployment Region</div>
+            <span style={{ fontSize: '10px', color: '#10b981', fontWeight: 700 }}>Selectable</span>
+          </div>
+          <div style={{ position: 'relative', marginTop: '4px' }}>
+            <select
+              className="input"
+              style={{
+                height: '34px',
+                padding: '4px 26px 4px 8px',
+                fontSize: '13px',
+                fontWeight: 700,
+                color: '#10b981',
+                background: '#09090b',
+                borderColor: '#3f3f46',
+                cursor: 'pointer',
+              }}
+              value={currentEnvironment.region}
+              onChange={(e) => handleQuickRegionSwitch(e.target.value)}
+              disabled={isDeploying || isDeleting}
+            >
+              {AZURE_REGIONS.map((r) => (
+                <option key={r.id} value={r.id}>
+                  {r.name} ({r.id}) {r.studentRecommended ? '⭐ (Student)' : ''}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
+
         <div className="card" style={{ padding: '14px 16px', background: '#18181b', border: '1px solid #27272a' }}>
           <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontWeight: 600 }}>Target Subscription</div>
           <div style={{ fontSize: '13px', fontWeight: 700, color: '#fafafa', marginTop: '4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
@@ -192,6 +252,53 @@ export const DeployView: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Azure Student / Free Tier Policy Advisory Banner */}
+      {isPolicyError && (
+        <div
+          className="card"
+          style={{
+            padding: '20px',
+            border: '1px solid #10b981',
+            background: 'rgba(16, 185, 129, 0.08)',
+            borderRadius: '12px',
+            marginBottom: '20px',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+            <Sparkles size={20} color="#10b981" />
+            <h3 style={{ fontSize: '15px', fontWeight: 800, color: '#fafafa', margin: 0 }}>
+              Azure for Students / Free Tier Regional Policy Detected
+            </h3>
+          </div>
+          <p style={{ fontSize: '12px', color: '#fafafa', margin: '0 0 14px 0', lineHeight: 1.5 }}>
+            Microsoft Azure restricts student & trial accounts to specific high-capacity cloud regions. Click below to switch to an authorized region and deploy instantly:
+          </p>
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+            {[
+              { id: 'eastus', label: 'East US (eastus)' },
+              { id: 'eastus2', label: 'East US 2 (eastus2)' },
+              { id: 'westus2', label: 'West US 2 (westus2)' },
+              { id: 'westeurope', label: 'West Europe (westeurope)' },
+              { id: 'centralus', label: 'Central US (centralus)' },
+            ].map((reg) => (
+              <button
+                key={reg.id}
+                className="btn btn-secondary btn-sm"
+                style={{
+                  background: currentEnvironment.region === reg.id ? '#10b981' : '#18181b',
+                  color: currentEnvironment.region === reg.id ? '#ffffff' : '#fafafa',
+                  borderColor: currentEnvironment.region === reg.id ? '#10b981' : '#3f3f46',
+                  fontWeight: 700,
+                }}
+                onClick={() => handleQuickRegionSwitch(reg.id)}
+              >
+                ⚡ {reg.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Auth Guard Banner */}
       {!loginStatus.loggedIn && (
@@ -261,11 +368,15 @@ export const DeployView: React.FC = () => {
                   }}
                 />
                 <span style={{ fontSize: '15px', fontWeight: 800, color: '#fafafa' }}>
-                  {overallStatus === 'running' ? 'Deploying to Azure...' : (currentEnvironment.status === 'deployed' || overallStatus === 'succeeded') ? 'Environment Active in Azure' : 'Ready to Deploy'}
+                  {overallStatus === 'running'
+                    ? 'Deploying to Azure...'
+                    : (currentEnvironment.status === 'deployed' || overallStatus === 'succeeded')
+                    ? 'Environment Active in Azure'
+                    : 'Ready to Deploy'}
                 </span>
               </div>
               <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: '4px 0 0 0' }}>
-                {currentEnvironment.resources.length} resources configured ({currentEnvironment.resources.map((r) => r.name).join(', ')})
+                Targeting Region: <strong style={{ color: '#10b981' }}>{currentEnvironment.region}</strong> • {currentEnvironment.resources.length} resources
               </p>
             </div>
 
@@ -346,14 +457,15 @@ export const DeployView: React.FC = () => {
         </div>
       )}
 
-      {/* Success / Error Alerts */}
+      {/* Success Message */}
       {deleteSuccessMsg && (
         <div className="badge badge-success" style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', marginBottom: '16px', fontSize: '13px' }}>
           <CheckCircle2 size={16} /> {deleteSuccessMsg}
         </div>
       )}
 
-      {errorMessage && (
+      {/* Error Alert */}
+      {errorMessage && !isPolicyError && (
         <div className="badge badge-error" style={{ display: 'block', width: '100%', padding: '14px 16px', borderRadius: '8px', marginBottom: '16px', fontSize: '12px', whiteSpace: 'pre-wrap', textAlign: 'left' }}>
           <XCircle size={16} style={{ display: 'inline', marginRight: '6px' }} />
           {errorMessage}
@@ -364,7 +476,7 @@ export const DeployView: React.FC = () => {
       {steps.length > 0 && (
         <div className="card" style={{ padding: '20px', background: '#18181b', border: '1px solid #27272a', borderRadius: '12px' }}>
           <div style={{ fontSize: '14px', fontWeight: 700, color: '#fafafa', marginBottom: '14px' }}>
-            Deployment Execution Progress
+            Deployment Execution Progress ({currentEnvironment.region})
           </div>
           <div className="deploy-timeline">
             {steps.map((step, idx) => (
