@@ -73,16 +73,16 @@ body {
   z-index: 1;
 }
 
-/* Floating Pill Navbar */
+/* Floating Glass Navbar (React Bits style) */
 .landing-nav-wrapper {
   position: sticky;
-  top: 18px;
+  top: 24px;
   left: 0;
   right: 0;
   z-index: 100;
   display: flex;
   justify-content: center;
-  padding: 0 16px;
+  padding: 0 24px;
   pointer-events: none;
 }
 
@@ -92,16 +92,16 @@ body {
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  max-width: 820px;
-  height: 52px;
-  padding: 0 8px 0 18px;
-  border-radius: 9999px;
-  background: rgba(18, 18, 22, 0.72);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  max-width: 960px;
+  height: 58px;
+  padding: 0 8px 0 24px;
+  border-radius: 20px;
+  background: rgba(18, 18, 22, 0.45);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
   border: 1px solid rgba(255, 255, 255, 0.12);
   box-shadow: 
-    0 8px 32px 0 rgba(0, 0, 0, 0.45),
+    0 20px 40px -10px rgba(0, 0, 0, 0.6),
     inset 0 1px 0 0 rgba(255, 255, 255, 0.15);
   transition: all 250ms cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -109,7 +109,7 @@ body {
 .nav-brand {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   text-decoration: none;
   color: var(--text-primary);
 }
@@ -119,30 +119,25 @@ body {
   align-items: center;
   justify-content: center;
   color: #ffffff;
-  transition: transform 200ms ease;
-}
-
-.nav-brand:hover .nav-logo-icon {
-  transform: rotate(15deg);
 }
 
 .nav-brand-title {
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 700;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.015em;
   color: #ffffff;
 }
 
 .nav-links {
   display: flex;
   align-items: center;
-  gap: 22px;
+  gap: 28px;
 }
 
 .nav-link {
-  color: #a1a1aa;
+  color: rgba(255, 255, 255, 0.65);
   text-decoration: none;
-  font-size: 13.5px;
+  font-size: 14px;
   font-weight: 500;
   transition: color 150ms ease;
   letter-spacing: -0.01em;
@@ -158,33 +153,34 @@ body {
   justify-content: center;
   background: #ffffff;
   color: #09090b;
-  padding: 7px 18px;
-  border-radius: 9999px;
-  font-size: 13px;
+  padding: 9px 22px;
+  border-radius: 12px;
+  font-size: 14px;
   font-weight: 700;
   letter-spacing: -0.01em;
   text-decoration: none;
   transition: transform 150ms ease, box-shadow 150ms ease, background-color 150ms ease;
-  box-shadow: 0 2px 8px rgba(255, 255, 255, 0.12);
+  box-shadow: 0 2px 8px rgba(255, 255, 255, 0.15);
 }
 
 .btn-nav-download:hover {
   background: #f4f4f5;
   transform: translateY(-1px);
-  box-shadow: 0 4px 14px rgba(255, 255, 255, 0.25);
+  box-shadow: 0 4px 16px rgba(255, 255, 255, 0.3);
 }
 
 @media (max-width: 640px) {
   .landing-nav-wrapper {
-    top: 10px;
-    padding: 0 10px;
+    top: 12px;
+    padding: 0 12px;
   }
   .landing-nav {
-    height: 48px;
-    padding: 0 6px 0 14px;
+    height: 52px;
+    padding: 0 6px 0 16px;
+    border-radius: 16px;
   }
   .nav-brand-title {
-    font-size: 13px;
+    font-size: 14px;
   }
   .nav-links {
     gap: 12px;
@@ -192,12 +188,10 @@ body {
   .nav-link {
     display: none;
   }
-  .nav-link:last-of-type {
-    display: none;
-  }
   .btn-nav-download {
-    padding: 6px 14px;
-    font-size: 12px;
+    padding: 7px 16px;
+    font-size: 13px;
+    border-radius: 10px;
   }
 }
 
