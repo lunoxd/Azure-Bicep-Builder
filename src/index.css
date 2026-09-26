@@ -705,17 +705,22 @@ select.input {
   line-height: 1.15;
 }
 
+.dashboard-hero-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  gap: 20px;
+  margin-bottom: 28px;
+  align-items: stretch;
+}
+
 .dashboard-money-card {
-  background: linear-gradient(135deg, #13141c 0%, #161826 50%, #10121a 100%);
+  background: linear-gradient(145deg, #13141d 0%, #171828 50%, #10121a 100%);
   border: 1px solid #27283c;
   border-radius: 16px;
-  padding: 24px 28px;
-  margin-bottom: 20px;
+  padding: 26px 28px;
   display: flex;
-  align-items: center;
+  flex-direction: column;
   justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 20px;
   position: relative;
   overflow: hidden;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
@@ -732,41 +737,49 @@ select.input {
   pointer-events: none;
 }
 
-.dashboard-metrics-box {
+.dashboard-quad-box {
   background: #121215;
   border: 1px solid #27272a;
-  border-radius: 14px;
+  border-radius: 16px;
   overflow: hidden;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  margin-bottom: 28px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
 }
 
-.dashboard-metric-cell {
-  padding: 22px 24px;
-  border-right: 1px solid #27272a;
+.dashboard-quad-cell {
+  padding: 20px 22px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
   transition: background 150ms ease;
 }
 
-.dashboard-metric-cell:last-child {
-  border-right: none;
+.dashboard-quad-cell:nth-child(1) {
+  border-right: 1px solid #27272a;
+  border-bottom: 1px solid #27272a;
 }
 
-.dashboard-metric-cell:hover {
-  background: #16161b;
+.dashboard-quad-cell:nth-child(2) {
+  border-bottom: 1px solid #27272a;
 }
 
-@media (max-width: 900px) {
-  .dashboard-metrics-box {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  .dashboard-metric-cell:nth-child(2) {
-    border-right: none;
-  }
-  .dashboard-metric-cell:nth-child(1),
-  .dashboard-metric-cell:nth-child(2) {
-    border-bottom: 1px solid #27272a;
+.dashboard-quad-cell:nth-child(3) {
+  border-right: 1px solid #27272a;
+}
+
+.dashboard-quad-cell:nth-child(4) {
+  /* bottom right cell */
+}
+
+.dashboard-quad-cell:hover {
+  background: #16161c;
+}
+
+@media (max-width: 960px) {
+  .dashboard-hero-grid {
+    grid-template-columns: 1fr;
   }
 }
 

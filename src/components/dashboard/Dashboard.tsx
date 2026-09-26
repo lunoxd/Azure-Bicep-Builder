@@ -93,36 +93,43 @@ export const Dashboard: React.FC<{ onNewEnv: () => void }> = ({ onNewEnv }) => {
         </div>
       </div>
 
-      {/* Big Money & Cloud Spending Container */}
-      <div className="dashboard-money-card">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '20px', zIndex: 1 }}>
-          <div
-            style={{
-              width: '54px',
-              height: '54px',
-              borderRadius: '14px',
-              background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(37, 99, 235, 0.08))',
-              border: '1px solid rgba(59, 130, 246, 0.3)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#60a5fa',
-              flexShrink: 0,
-            }}
-          >
-            <Wallet size={26} strokeWidth={2.2} />
-          </div>
-
+      {/* Hero Grid: Big Money Container on Left, Big 2x2 Square 4-Division Metrics Box on Right */}
+      <div className="dashboard-hero-grid">
+        {/* Big Money & Cloud Spending Container */}
+        <div className="dashboard-money-card">
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-              <span style={{ fontSize: '11px', fontWeight: 700, color: '#93c5fd', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                Azure Credits & Cloud Spending
-              </span>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '18px', zIndex: 1 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div
+                  style={{
+                    width: '44px',
+                    height: '44px',
+                    borderRadius: '12px',
+                    background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.25), rgba(37, 99, 235, 0.1))',
+                    border: '1px solid rgba(59, 130, 246, 0.35)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#60a5fa',
+                  }}
+                >
+                  <Wallet size={22} strokeWidth={2.2} />
+                </div>
+                <div>
+                  <div style={{ fontSize: '11px', fontWeight: 700, color: '#93c5fd', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                    Azure Credits & Spending
+                  </div>
+                  <div style={{ fontSize: '12px', color: '#a1a1aa', marginTop: '2px' }}>
+                    {selectedSubscription ? selectedSubscription.name : 'Sandbox Environment'}
+                  </div>
+                </div>
+              </div>
+
               <span
                 style={{
                   fontSize: '10px',
                   fontWeight: 600,
-                  padding: '2px 7px',
+                  padding: '3px 8px',
                   borderRadius: '10px',
                   background: 'rgba(34, 197, 94, 0.15)',
                   color: '#4ade80',
@@ -133,118 +140,124 @@ export const Dashboard: React.FC<{ onNewEnv: () => void }> = ({ onNewEnv }) => {
               </span>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px' }}>
-              <span
+            <div style={{ marginBottom: '16px', zIndex: 1 }}>
+              <div
                 style={{
-                  fontSize: '34px',
+                  fontSize: '36px',
                   fontWeight: 800,
                   color: '#ffffff',
                   fontFamily: 'JetBrains Mono, monospace',
                   letterSpacing: '-0.02em',
+                  lineHeight: '1.1',
                 }}
               >
                 {balanceDisplay}
+              </div>
+              <div style={{ fontSize: '12px', color: '#a1a1aa', marginTop: '6px' }}>
+                Available credit balance for compute & networking
+              </div>
+            </div>
+          </div>
+
+          <div style={{ zIndex: 1, paddingTop: '14px', borderTop: '1px solid rgba(255, 255, 255, 0.06)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ fontSize: '11px', color: '#71717a' }}>
+              Real-time Cost Monitoring
+            </div>
+            <button
+              onClick={() => setActiveNav('credits')}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                background: '#1e2030',
+                border: '1px solid #3b4261',
+                color: '#e2e8f0',
+                padding: '8px 14px',
+                borderRadius: '8px',
+                fontSize: '12px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                transition: 'all 150ms ease',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = '#282b40';
+                e.currentTarget.style.borderColor = '#60a5fa';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = '#1e2030';
+                e.currentTarget.style.borderColor = '#3b4261';
+              }}
+            >
+              Manage Credits <ArrowRight size={13} />
+            </button>
+          </div>
+        </div>
+
+        {/* Big Square 4-Division Metrics Box */}
+        <div className="dashboard-quad-box">
+          {/* Division 1: Top-Left - Environments */}
+          <div className="dashboard-quad-cell">
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+              <span style={{ fontSize: '11px', fontWeight: 700, color: '#a1a1aa', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                Environments
               </span>
-              <span style={{ fontSize: '13px', color: '#a1a1aa' }}>
-                remaining available balance
+              <div style={{ width: '26px', height: '26px', borderRadius: '7px', background: 'rgba(59, 130, 246, 0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#60a5fa' }}>
+                <Globe size={14} />
+              </div>
+            </div>
+            <div>
+              <div style={{ fontSize: '26px', fontWeight: 800, color: '#fafafa', lineHeight: 1.1 }}>{environments.length}</div>
+              <div style={{ fontSize: '11px', color: '#a1a1aa', marginTop: '4px' }}>Active topologies</div>
+            </div>
+          </div>
+
+          {/* Division 2: Top-Right - Deployed */}
+          <div className="dashboard-quad-cell">
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+              <span style={{ fontSize: '11px', fontWeight: 700, color: '#a1a1aa', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                Deployed
               </span>
+              <div style={{ width: '26px', height: '26px', borderRadius: '7px', background: 'rgba(34, 197, 94, 0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4ade80' }}>
+                <CheckCircle2 size={14} />
+              </div>
             </div>
-
-            <div style={{ fontSize: '12px', color: '#71717a', marginTop: '4px' }}>
-              {selectedSubscription
-                ? `Subscription: ${selectedSubscription.name} (${selectedSubscription.id.slice(0, 8)}...)`
-                : 'Estimated sandbox allowance for local topology tests'}
-            </div>
-          </div>
-        </div>
-
-        <div style={{ zIndex: 1 }}>
-          <button
-            onClick={() => setActiveNav('credits')}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              background: '#1e2030',
-              border: '1px solid #3b4261',
-              color: '#e2e8f0',
-              padding: '10px 18px',
-              borderRadius: '10px',
-              fontSize: '13px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              transition: 'all 150ms ease',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = '#282b40';
-              e.currentTarget.style.borderColor = '#60a5fa';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = '#1e2030';
-              e.currentTarget.style.borderColor = '#3b4261';
-            }}
-          >
-            Manage Credits & Billing <ArrowRight size={14} />
-          </button>
-        </div>
-      </div>
-
-      {/* Unified 4-Division Metrics Container */}
-      <div className="dashboard-metrics-box">
-        {/* Division 1: Environments / Active topologies */}
-        <div className="dashboard-metric-cell">
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
-            <span style={{ fontSize: '11px', fontWeight: 700, color: '#a1a1aa', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-              Environments
-            </span>
-            <div style={{ width: '28px', height: '28px', borderRadius: '8px', background: 'rgba(59, 130, 246, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#60a5fa' }}>
-              <Globe size={15} />
+            <div>
+              <div style={{ fontSize: '26px', fontWeight: 800, color: '#fafafa', lineHeight: 1.1 }}>{deployedCount}</div>
+              <div style={{ fontSize: '11px', color: '#a1a1aa', marginTop: '4px' }}>Active deployments</div>
             </div>
           </div>
-          <div style={{ fontSize: '28px', fontWeight: 800, color: '#fafafa', lineHeight: 1.1 }}>{environments.length}</div>
-          <div style={{ fontSize: '11px', color: '#a1a1aa', marginTop: '6px' }}>Active topologies</div>
-        </div>
 
-        {/* Division 2: Deployed / Active deployments */}
-        <div className="dashboard-metric-cell">
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
-            <span style={{ fontSize: '11px', fontWeight: 700, color: '#a1a1aa', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-              Deployed
-            </span>
-            <div style={{ width: '28px', height: '28px', borderRadius: '8px', background: 'rgba(34, 197, 94, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4ade80' }}>
-              <CheckCircle2 size={15} />
+          {/* Division 3: Bottom-Left - Draft Stacks */}
+          <div className="dashboard-quad-cell">
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+              <span style={{ fontSize: '11px', fontWeight: 700, color: '#a1a1aa', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                Draft Stacks
+              </span>
+              <div style={{ width: '26px', height: '26px', borderRadius: '7px', background: 'rgba(234, 179, 8, 0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#facc15' }}>
+                <Layers size={14} />
+              </div>
+            </div>
+            <div>
+              <div style={{ fontSize: '26px', fontWeight: 800, color: '#fafafa', lineHeight: 1.1 }}>{draftCount}</div>
+              <div style={{ fontSize: '11px', color: '#a1a1aa', marginTop: '4px' }}>In-design configurations</div>
             </div>
           </div>
-          <div style={{ fontSize: '28px', fontWeight: 800, color: '#fafafa', lineHeight: 1.1 }}>{deployedCount}</div>
-          <div style={{ fontSize: '11px', color: '#a1a1aa', marginTop: '6px' }}>Active deployments</div>
-        </div>
 
-        {/* Division 3: Draft Stacks / In-design configurations */}
-        <div className="dashboard-metric-cell">
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
-            <span style={{ fontSize: '11px', fontWeight: 700, color: '#a1a1aa', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-              Draft Stacks
-            </span>
-            <div style={{ width: '28px', height: '28px', borderRadius: '8px', background: 'rgba(234, 179, 8, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#facc15' }}>
-              <Layers size={15} />
+          {/* Division 4: Bottom-Right - Configured Nodes */}
+          <div className="dashboard-quad-cell">
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+              <span style={{ fontSize: '11px', fontWeight: 700, color: '#a1a1aa', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                Configured Nodes
+              </span>
+              <div style={{ width: '26px', height: '26px', borderRadius: '7px', background: 'rgba(168, 85, 247, 0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#c084fc' }}>
+                <Box size={14} />
+              </div>
+            </div>
+            <div>
+              <div style={{ fontSize: '26px', fontWeight: 800, color: '#fafafa', lineHeight: 1.1 }}>{totalResources}</div>
+              <div style={{ fontSize: '11px', color: '#a1a1aa', marginTop: '4px' }}>Total topology resources</div>
             </div>
           </div>
-          <div style={{ fontSize: '28px', fontWeight: 800, color: '#fafafa', lineHeight: 1.1 }}>{draftCount}</div>
-          <div style={{ fontSize: '11px', color: '#a1a1aa', marginTop: '6px' }}>In-design configurations</div>
-        </div>
-
-        {/* Division 4: Configured Nodes / Total topology resources */}
-        <div className="dashboard-metric-cell">
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
-            <span style={{ fontSize: '11px', fontWeight: 700, color: '#a1a1aa', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-              Configured Nodes
-            </span>
-            <div style={{ width: '28px', height: '28px', borderRadius: '8px', background: 'rgba(168, 85, 247, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#c084fc' }}>
-              <Box size={15} />
-            </div>
-          </div>
-          <div style={{ fontSize: '28px', fontWeight: 800, color: '#fafafa', lineHeight: 1.1 }}>{totalResources}</div>
-          <div style={{ fontSize: '11px', color: '#a1a1aa', marginTop: '6px' }}>Total topology resources</div>
         </div>
       </div>
 
