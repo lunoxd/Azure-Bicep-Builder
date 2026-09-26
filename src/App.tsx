@@ -11,6 +11,8 @@ import { ModuleVersionManager } from './components/modules/ModuleVersionManager'
 import { RegionReplicationModal } from './components/replicate/RegionReplicationModal';
 import { NewEnvironmentModal } from './components/environments/NewEnvironmentModal';
 
+import { CloudAccountView } from './components/account/CloudAccountView';
+
 import { useAzureStore, useEnvironmentStore, useUIStore } from './stores';
 import { checkLoginStatus, checkAzCli } from './hooks/useTauri';
 import { TEMPLATES } from './data/resources';
@@ -90,6 +92,10 @@ export const App: React.FC = () => {
   const renderContent = () => {
     if (activeNav === 'dashboard' || activeNav === 'templates') {
       return <Dashboard onNewEnv={() => setNewEnvModalOpen(true)} />;
+    }
+
+    if (activeNav === 'account') {
+      return <CloudAccountView />;
     }
 
     if (activeNav === 'modules') {

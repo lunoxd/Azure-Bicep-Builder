@@ -244,27 +244,90 @@ export async function fetchAzureSubscriptions(accessToken: string): Promise<{
 }
 
 /**
- * 3b. Fetch available Azure regions/locations for a specific subscription
+ * 3b. Fetch available Azure locations/regions for a subscription
  */
 export async function fetchSubscriptionLocations(
   subscriptionId: string,
   accessToken?: string
-): Promise<{ id: string; name: string; displayName: string }[]> {
+): Promise<{ name: string; displayName: string }[]> {
   const token = accessToken || getSavedAuthSession()?.token?.access_token;
   if (!token) return [];
 
-  const locationsUrl = `https://management.azure.com/subscriptions/${subscriptionId}/locations?api-version=2020-01-01`;
+  const locUrl = `https://management.azure.com/subscriptions/${subscriptionId}/locations?api-version=2020-01-01`;
   try {
-    const data = await getJson(locationsUrl, token);
+    const data = await getJson(locUrl, token);
     if (data?.value && Array.isArray(data.value)) {
       return data.value.map((loc: any) => ({
-        id: loc.name,
-        name: loc.displayName || loc.name,
+        name: loc.name,
         displayName: loc.displayName || loc.name,
       }));
     }
   } catch (err) {
     console.warn('Subscription locations fetch notice:', err);
+  }
+  return [];
+}
+
+
+/**
+ * 3c. Fetch all live Azure resources in a subscription
+ */
+export async function fetchSubscriptionResources(
+  subscriptionId: string,
+  accessToken?: string
+): Promise<any[]> {
+  const token = accessToken || getSavedAuthSession()?.token?.access_token;
+  if (!token) return [];
+
+  const resourcesUrl = `https://management.azure.com/subscriptions/${subscriptionId}/resources?api-version=2021-04-01`;
+  try {
+    const data = await getJson(resourcesUrl, token);
+    if (data?.value && Array.isArray(data.value)) {
+      return data.value.map((res: any) => {
+        // Extract resource group from Azure resource ID (/subscriptions/.../resourceGroups/<rg>/...)
+        const match = res.id.match(/resourceGroups\/([^\/]+)/i);
+        const resourceGroup = match ? match[1] : 'default-rg';
+        return {
+          id: res.id,
+          name: res.name,
+          type: res.type,
+          location: res.location,
+          resourceGroup,
+          sku: res.sku,
+          tags: res.tags,
+          provisioningState: res.provisioningState || 'Succeeded',
+        };
+      });
+    }
+  } catch (err) {
+    console.warn('Subscription resources fetch notice:', err);
+  }
+  return [];
+}
+
+/**
+ * 3d. Fetch all Resource Groups in a subscription
+ */
+export async function fetchResourceGroups(
+  subscriptionId: string,
+  accessToken?: string
+): Promise<any[]> {
+  const token = accessToken || getSavedAuthSession()?.token?.access_token;
+  if (!token) return [];
+
+  const rgUrl = `https://management.azure.com/subscriptions/${subscriptionId}/resourcegroups?api-version=2021-04-01`;
+  try {
+    const data = await getJson(rgUrl, token);
+    if (data?.value && Array.isArray(data.value)) {
+      return data.value.map((rg: any) => ({
+        id: rg.id,
+        name: rg.name,
+        location: rg.location,
+        properties: rg.properties,
+      }));
+    }
+  } catch (err) {
+    console.warn('Subscription resource groups fetch notice:', err);
   }
   return [];
 }
@@ -665,3 +728,113 @@ export function getSavedAuthSession(): StoredAuthSession | null {
 export function clearAuthSession() {
   localStorage.removeItem(STORAGE_KEY_AUTH);
 }
+
+/**
+ * 6. Fetch Billing, Spending & Credits Breakdown
+ */
+export interface AzureBillingSummary {
+  subscriptionName: string;
+  subscriptionId: string;
+  currency: string;
+  totalSpent: number;
+  remainingCredits: number;
+  initialCredits: number;
+  spendingByService: { serviceName: string; cost: number; currency: string }[];
+  isStudentAccount: boolean;
+  status: string;
+}
+
+export async function fetchSubscriptionBillingInfo(
+  subscriptionId: string,
+  subName?: string,
+  accessToken?: string
+): Promise<AzureBillingSummary> {
+  const token = accessToken || getSavedAuthSession()?.token?.access_token;
+  const isStudent = (subName || '').toLowerCase().includes('student') || (subName || '').toLowerCase().includes('azure for student');
+  const initialCredits = isStudent ? 100.0 : 200.0;
+
+  let totalSpent = 0.0;
+  let currency = 'USD';
+  const spendingByService: { serviceName: string; cost: number; currency: string }[] = [];
+
+  if (token && subscriptionId) {
+    try {
+      // Query Azure Consumption Usage Details REST API
+      const usageUrl = `https://management.azure.com/subscriptions/${subscriptionId}/providers/Microsoft.Consumption/usageDetails?api-version=2021-10-01&$top=50`;
+      const data = await getJson(usageUrl, token);
+      if (data?.value && Array.isArray(data.value)) {
+        const serviceMap: Record<string, { cost: number; currency: string }> = {};
+        for (const item of data.value) {
+          const props = item.properties || {};
+          const cost = parseFloat(props.costInBillingCurrency || props.pretaxCost || '0');
+          const service = props.consumedService || props.meterDetails?.meterCategory || 'Cloud Compute';
+          const curr = props.billingCurrency || 'USD';
+          currency = curr;
+          totalSpent += cost;
+
+          if (!serviceMap[service]) {
+            serviceMap[service] = { cost: 0, currency: curr };
+          }
+          serviceMap[service].cost += cost;
+        }
+
+        for (const [serviceName, val] of Object.entries(serviceMap)) {
+          spendingByService.push({
+            serviceName,
+            cost: Math.round(val.cost * 100) / 100,
+            currency: val.currency,
+          });
+        }
+      }
+    } catch (err) {
+      console.warn('Billing API query notice (may require Enterprise/Billing permissions):', err);
+    }
+  }
+
+  // Calculate remaining credits
+  const remainingCredits = Math.max(0, initialCredits - totalSpent);
+
+  return {
+    subscriptionName: subName || 'Azure Subscription',
+    subscriptionId,
+    currency,
+    totalSpent: Math.round(totalSpent * 100) / 100,
+    remainingCredits: Math.round(remainingCredits * 100) / 100,
+    initialCredits,
+    spendingByService,
+    isStudentAccount: isStudent,
+    status: 'Active',
+  };
+}
+
+/**
+ * 7. Delete individual Azure Resource via ARM REST API
+ */
+export async function deleteResourceByIdViaArm(
+  resourceId: string,
+  accessToken?: string
+): Promise<any> {
+  const token = accessToken || getSavedAuthSession()?.token?.access_token;
+  if (!token) {
+    throw new Error('Not authenticated with Azure. Please sign in first.');
+  }
+
+  const deleteUrl = `https://management.azure.com${resourceId}?api-version=2021-04-01`;
+  const proxyUrl = deleteUrl.replace('https://management.azure.com', '/api/azure-arm');
+
+  const res = await fetch(proxyUrl, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!res.ok && res.status !== 202 && res.status !== 204 && res.status !== 200) {
+    const errText = await res.text();
+    throw new Error(`Failed to delete resource: ${errText}`);
+  }
+
+  return { status: 'Deleted', resourceId };
+}
+

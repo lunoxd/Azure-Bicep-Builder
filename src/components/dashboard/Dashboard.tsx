@@ -74,13 +74,13 @@ export const Dashboard: React.FC<{ onNewEnv: () => void }> = ({ onNewEnv }) => {
                       width: '36px',
                       height: '36px',
                       borderRadius: '8px',
-                      background: 'rgba(16, 185, 129, 0.12)',
+                      background: 'rgba(59, 130, 246, 0.12)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                     }}
                   >
-                    <Globe size={18} color="#10b981" />
+                    <Globe size={18} color="#3b82f6" />
                   </div>
                   <span
                     className={`badge badge-${
@@ -111,7 +111,7 @@ export const Dashboard: React.FC<{ onNewEnv: () => void }> = ({ onNewEnv }) => {
                     alignItems: 'center',
                     justifyContent: 'space-between',
                     fontSize: '12px',
-                    color: '#10b981',
+                    color: '#3b82f6',
                     fontWeight: 700,
                   }}
                 >
@@ -147,7 +147,7 @@ export const Dashboard: React.FC<{ onNewEnv: () => void }> = ({ onNewEnv }) => {
           {TEMPLATES.map((tmpl) => (
             <div key={tmpl.id} className="template-card" onClick={() => handleCreateFromTemplate(tmpl)}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                <span className="material-symbols-outlined" style={{ fontSize: '26px', color: '#10b981' }}>
+                <span className="material-symbols-outlined" style={{ fontSize: '26px', color: '#3b82f6' }}>
                   {tmpl.icon}
                 </span>
                 <span className="badge badge-info">{tmpl.category}</span>
@@ -173,7 +173,7 @@ export const Dashboard: React.FC<{ onNewEnv: () => void }> = ({ onNewEnv }) => {
                 }}
               >
                 <span>Launch Template</span>
-                <ArrowRight size={14} color="#10b981" />
+                <ArrowRight size={14} color="#3b82f6" />
               </div>
             </div>
           ))}

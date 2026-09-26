@@ -209,6 +209,18 @@ export interface ResourceTypeInfo {
 // View modes
 export type ViewMode = 'visual' | 'code' | 'split' | 'whatif' | 'deploy';
 
+// Live Azure Cloud Resource
+export interface LiveAzureResource {
+  id: string;
+  name: string;
+  type: string;
+  location: string;
+  resourceGroup: string;
+  sku?: { name?: string; tier?: string };
+  tags?: Record<string, string>;
+  provisioningState?: string;
+}
+
 // Navigation
 export type NavSection =
   | 'dashboard'
@@ -216,4 +228,5 @@ export type NavSection =
   | 'templates'
   | 'modules'
   | 'deployments'
+  | 'account'
   | 'settings';

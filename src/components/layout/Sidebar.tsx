@@ -1,7 +1,7 @@
 import React from 'react';
 import { useUIStore, useAzureStore, useEnvironmentStore } from '../../stores';
 import type { NavSection } from '../../types';
-import { LayoutDashboard, Network, FileCode, Layers, Rocket, Zap, Cloud } from 'lucide-react';
+import { LayoutDashboard, Network, FileCode, Layers, Rocket, Zap, Cloud, Wallet } from 'lucide-react';
 
 interface NavItem {
   id: NavSection;
@@ -12,6 +12,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={18} /> },
   { id: 'environments', label: 'Environments', icon: <Network size={18} /> },
+  { id: 'account', label: 'Credits & Resources', icon: <Wallet size={18} /> },
   { id: 'templates', label: 'Templates', icon: <FileCode size={18} /> },
   { id: 'modules', label: 'Module Versions', icon: <Layers size={18} /> },
   { id: 'deployments', label: 'Deployments', icon: <Rocket size={18} /> },
@@ -64,7 +65,7 @@ export const Sidebar: React.FC = () => {
               }}
             >
               <span className="sidebar-item-icon">
-                <Cloud size={16} color="#10b981" />
+                <Cloud size={16} color="#3b82f6" />
               </span>
               <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {currentEnvironment.name}

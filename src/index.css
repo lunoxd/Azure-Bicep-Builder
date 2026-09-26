@@ -26,12 +26,12 @@
 
   --border-primary: #27272a;   /* Subtle divider border */
   --border-secondary: #1e1e24; /* Soft card border */
-  --border-focus: #10b981;     /* Emerald focus ring */
+  --border-focus: #3b82f6;     /* Azure Blue focus ring */
 
-  /* Button Accent: Vibrant Emerald Green */
-  --color-primary: #10b981;
-  --color-primary-hover: #059669;
-  --color-primary-active: #047857;
+  /* Button Accent: Vibrant Azure Blue */
+  --color-primary: #2563eb;
+  --color-primary-hover: #1d4ed8;
+  --color-primary-active: #1e40af;
   --color-primary-text: #ffffff;
 
   /* Status Tokens */
@@ -48,7 +48,7 @@
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.6);
   --shadow-md: 0 4px 12px -2px rgba(0, 0, 0, 0.7);
   --shadow-lg: 0 12px 24px -4px rgba(0, 0, 0, 0.8);
-  --shadow-green: 0 0 20px rgba(16, 185, 129, 0.3);
+  --shadow-blue: 0 0 20px rgba(37, 99, 235, 0.35);
 
   /* Clean Radius */
   --radius-sm: 6px;
@@ -316,22 +316,22 @@ body,
   cursor: not-allowed;
 }
 
-/* PRIMARY ACTION BUTTON: Big Vibrant Emerald Green with Pure White Text */
+/* PRIMARY ACTION BUTTON: Vibrant Electric Azure Blue with Pure White Text */
 .btn-primary {
-  background: #10b981;
+  background: #2563eb;
   color: #ffffff !important;
-  border-color: #059669;
+  border-color: #1d4ed8;
   box-shadow: var(--shadow-sm);
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: #059669;
-  box-shadow: var(--shadow-green);
+  background: #1d4ed8;
+  box-shadow: var(--shadow-blue);
   transform: translateY(-1px);
 }
 
 .btn-primary:active:not(:disabled) {
-  background: #047857;
+  background: #1e40af;
   transform: translateY(0);
 }
 
@@ -581,8 +581,8 @@ select.input {
 }
 
 .resource-node.selected {
-  border-color: #10b981;
-  box-shadow: 0 0 0 2px #10b981, var(--shadow-green);
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px #2563eb, var(--shadow-blue);
 }
 
 .resource-node-header {
@@ -718,8 +718,8 @@ select.input {
 }
 
 .template-card:hover {
-  border-color: #10b981;
-  box-shadow: var(--shadow-md);
+  border-color: #3b82f6;
+  box-shadow: 0 0 16px rgba(59, 130, 246, 0.2);
   transform: translateY(-2px);
 }
 
@@ -1031,7 +1031,7 @@ select.input {
 }
 
 .react-flow__edge.selected .react-flow__edge-path {
-  stroke: #10b981 !important;
+  stroke: #3b82f6 !important;
 }
 
 .react-flow__handle {
@@ -1042,7 +1042,7 @@ select.input {
 }
 
 .react-flow__handle:hover {
-  background: #10b981 !important;
+  background: #2563eb !important;
 }
 
 .header-title {

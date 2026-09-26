@@ -61,10 +61,10 @@ export const VisualBuilder: React.FC = () => {
           source: targetId,
           target: res.id,
           animated: true,
-          style: { stroke: '#10b981', strokeWidth: 2.5 },
+          style: { stroke: '#3b82f6', strokeWidth: 2.5 },
           markerEnd: {
             type: MarkerType.ArrowClosed,
-            color: '#10b981',
+            color: '#3b82f6',
           },
         });
       });
@@ -92,10 +92,10 @@ export const VisualBuilder: React.FC = () => {
             {
               ...params,
               animated: true,
-              style: { stroke: '#10b981', strokeWidth: 2.5 },
+              style: { stroke: '#3b82f6', strokeWidth: 2.5 },
               markerEnd: {
                 type: MarkerType.ArrowClosed,
-                color: '#10b981',
+                color: '#3b82f6',
               },
             },
             eds
@@ -252,7 +252,7 @@ export const VisualBuilder: React.FC = () => {
             <Background color="rgba(255, 255, 255, 0.04)" gap={18} variant={BackgroundVariant.Dots} />
             <Controls />
             <MiniMap
-              nodeColor={() => '#10b981'}
+              nodeColor={() => '#3b82f6'}
               maskColor="rgba(9, 9, 11, 0.85)"
             />
           </ReactFlow>

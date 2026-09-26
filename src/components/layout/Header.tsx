@@ -36,7 +36,7 @@ export const Header: React.FC = () => {
                 {currentEnvironment.resourceGroup}
               </span>
               <span className="env-region">
-                <MapPin size={14} color="#10b981" />
+                <MapPin size={14} color="#3b82f6" />
                 {currentEnvironment.region}
               </span>
             </div>
@@ -104,7 +104,7 @@ export const Header: React.FC = () => {
                 onClick={() => setAzureConnectionModalOpen(true)}
                 title="Manage Azure Connection"
               >
-                <ShieldCheck size={14} color="#10b981" />
+                <ShieldCheck size={14} color="#3b82f6" />
                 <span>{loginStatus.account?.name ? `${loginStatus.account.name.split(' ')[0]} (Connected)` : 'Connected'}</span>
               </button>
             </div>

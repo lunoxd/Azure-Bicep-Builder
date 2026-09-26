@@ -66,10 +66,10 @@ export const DeployView: React.FC = () => {
     if (loginStatus.loggedIn && selectedSubscription?.id) {
       fetchSubscriptionLocations(selectedSubscription.id).then((liveLocs) => {
         if (liveLocs && liveLocs.length > 0) {
-          const merged = liveLocs.map((loc) => ({
-            id: loc.id,
+          const merged = liveLocs.map((loc: { name: string; displayName: string }) => ({
+            id: loc.name,
             name: loc.displayName || loc.name,
-            studentRecommended: ['eastasia', 'southeastasia', 'centralindia', 'eastus', 'eastus2', 'westus2', 'westeurope', 'centralus'].includes(loc.id),
+            studentRecommended: ['eastasia', 'southeastasia', 'centralindia', 'eastus', 'eastus2', 'westus2', 'westeurope', 'centralus'].includes(loc.name.toLowerCase()),
           }));
           setRegions(merged);
         }
@@ -291,14 +291,14 @@ export const DeployView: React.FC = () => {
           className="card"
           style={{
             padding: '20px',
-            border: '1px solid #10b981',
-            background: 'rgba(16, 185, 129, 0.08)',
+            border: '1px solid #2563eb',
+            background: 'rgba(37, 99, 235, 0.08)',
             borderRadius: '12px',
             marginBottom: '20px',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-            <Sparkles size={20} color="#10b981" />
+            <Sparkles size={20} color="#3b82f6" />
             <h3 style={{ fontSize: '15px', fontWeight: 800, color: '#fafafa', margin: 0 }}>
               Azure for Students Regional Policy Detected
             </h3>
@@ -320,9 +320,9 @@ export const DeployView: React.FC = () => {
                 key={reg.id}
                 className="btn btn-secondary btn-sm"
                 style={{
-                  background: currentEnvironment.region === reg.id ? '#10b981' : '#18181b',
+                  background: currentEnvironment.region === reg.id ? '#2563eb' : '#18181b',
                   color: currentEnvironment.region === reg.id ? '#ffffff' : '#fafafa',
-                  borderColor: currentEnvironment.region === reg.id ? '#10b981' : '#3f3f46',
+                  borderColor: currentEnvironment.region === reg.id ? '#2563eb' : '#3f3f46',
                   fontWeight: 700,
                   padding: '6px 12px',
                 }}
@@ -411,7 +411,7 @@ export const DeployView: React.FC = () => {
                 </span>
               </div>
               <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: '4px 0 0 0' }}>
-                Targeting Region: <strong style={{ color: '#10b981' }}>{currentEnvironment.region}</strong> • {currentEnvironment.resources.length} resources
+                Targeting Region: <strong style={{ color: '#3b82f6' }}>{currentEnvironment.region}</strong> • {currentEnvironment.resources.length} resources
               </p>
             </div>
 

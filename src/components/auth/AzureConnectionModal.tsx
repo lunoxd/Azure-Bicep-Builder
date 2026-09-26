@@ -252,8 +252,8 @@ export const AzureConnectionModal: React.FC<{ isOpen: boolean; onClose: () => vo
                 padding: '8px 14px',
                 borderRadius: '6px',
                 border: 'none',
-                background: authMethod === 'inapp' ? '#27272a' : 'transparent',
-                color: authMethod === 'inapp' ? '#fafafa' : '#a1a1aa',
+                background: authMethod === 'inapp' ? '#2563eb' : 'transparent',
+                color: authMethod === 'inapp' ? '#ffffff' : '#a1a1aa',
                 fontSize: '12px',
                 fontWeight: 700,
                 display: 'flex',
@@ -263,7 +263,7 @@ export const AzureConnectionModal: React.FC<{ isOpen: boolean; onClose: () => vo
                 cursor: 'pointer',
               }}
             >
-              <Zap size={14} color={authMethod === 'inapp' ? '#10b981' : '#71717a'} />
+              <Zap size={14} color={authMethod === 'inapp' ? '#ffffff' : '#71717a'} />
               ⚡ In-App Direct Login (Fastest)
             </button>
             <button
@@ -273,8 +273,8 @@ export const AzureConnectionModal: React.FC<{ isOpen: boolean; onClose: () => vo
                 padding: '8px 14px',
                 borderRadius: '6px',
                 border: 'none',
-                background: authMethod === 'cli' ? '#27272a' : 'transparent',
-                color: authMethod === 'cli' ? '#fafafa' : '#a1a1aa',
+                background: authMethod === 'cli' ? '#2563eb' : 'transparent',
+                color: authMethod === 'cli' ? '#ffffff' : '#a1a1aa',
                 fontSize: '12px',
                 fontWeight: 700,
                 display: 'flex',
@@ -284,7 +284,7 @@ export const AzureConnectionModal: React.FC<{ isOpen: boolean; onClose: () => vo
                 cursor: 'pointer',
               }}
             >
-              <Terminal size={14} color={authMethod === 'cli' ? '#10b981' : '#71717a'} />
+              <Terminal size={14} color={authMethod === 'cli' ? '#ffffff' : '#71717a'} />
               Local Azure CLI (az)
             </button>
           </div>
@@ -297,13 +297,13 @@ export const AzureConnectionModal: React.FC<{ isOpen: boolean; onClose: () => vo
             style={{
               padding: '20px',
               marginBottom: '18px',
-              borderColor: 'rgba(16, 185, 129, 0.4)',
-              background: 'rgba(16, 185, 129, 0.04)',
+              borderColor: 'rgba(37, 99, 235, 0.4)',
+              background: 'rgba(37, 99, 235, 0.04)',
             }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <ShieldCheck size={28} color="#10b981" />
+                <ShieldCheck size={28} color="#3b82f6" />
                 <div>
                   <div style={{ fontSize: 'var(--text-base)', fontWeight: 800, color: '#fafafa' }}>
                     {loginStatus.account?.name || 'Authenticated User'}
@@ -380,7 +380,7 @@ export const AzureConnectionModal: React.FC<{ isOpen: boolean; onClose: () => vo
                         fontSize: '28px',
                         fontWeight: 900,
                         letterSpacing: '4px',
-                        color: '#10b981',
+                        color: '#3b82f6',
                         margin: '8px 0',
                       }}
                     >
@@ -389,7 +389,7 @@ export const AzureConnectionModal: React.FC<{ isOpen: boolean; onClose: () => vo
 
                     <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginTop: '12px' }}>
                       <button className="btn btn-secondary btn-sm" onClick={handleCopyCode}>
-                        {copiedCode ? <CheckCircle2 size={13} color="#10b981" /> : <Copy size={13} />}
+                        {copiedCode ? <CheckCircle2 size={13} color="#3b82f6" /> : <Copy size={13} />}
                         {copiedCode ? 'Code Copied!' : 'Copy Code'}
                       </button>
                       <a
@@ -407,7 +407,7 @@ export const AzureConnectionModal: React.FC<{ isOpen: boolean; onClose: () => vo
                       <div
                         style={{
                           fontSize: '11px',
-                          color: '#10b981',
+                          color: '#3b82f6',
                           marginTop: '12px',
                           display: 'flex',
                           alignItems: 'center',
