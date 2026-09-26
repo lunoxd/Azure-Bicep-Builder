@@ -167,6 +167,21 @@ body {
   transition: background-color 150ms ease, border-color 150ms ease;
 }
 
+.apple-spinner {
+  animation: apple-spinner-spin 0.9s steps(12, end) infinite;
+  display: inline-block;
+  color: var(--text-secondary);
+}
+
+@keyframes apple-spinner-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
 .nav-github-btn:hover .nav-github-stars {
   background: #35373c;
   border-color: #4e5058;

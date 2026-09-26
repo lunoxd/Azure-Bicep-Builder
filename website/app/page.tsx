@@ -28,6 +28,29 @@ const GithubIcon = ({ size = 16 }: { size?: number }) => (
   </svg>
 );
 
+const AppleSpinner = ({ size = 11 }: { size?: number }) => (
+  <svg
+    className="apple-spinner"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="currentColor"
+  >
+    <rect x="11" y="1" width="2" height="5" rx="1" opacity="0.08" />
+    <rect x="11" y="1" width="2" height="5" rx="1" transform="rotate(30 12 12)" opacity="0.16" />
+    <rect x="11" y="1" width="2" height="5" rx="1" transform="rotate(60 12 12)" opacity="0.24" />
+    <rect x="11" y="1" width="2" height="5" rx="1" transform="rotate(90 12 12)" opacity="0.32" />
+    <rect x="11" y="1" width="2" height="5" rx="1" transform="rotate(120 12 12)" opacity="0.4" />
+    <rect x="11" y="1" width="2" height="5" rx="1" transform="rotate(150 12 12)" opacity="0.48" />
+    <rect x="11" y="1" width="2" height="5" rx="1" transform="rotate(180 12 12)" opacity="0.56" />
+    <rect x="11" y="1" width="2" height="5" rx="1" transform="rotate(210 12 12)" opacity="0.64" />
+    <rect x="11" y="1" width="2" height="5" rx="1" transform="rotate(240 12 12)" opacity="0.72" />
+    <rect x="11" y="1" width="2" height="5" rx="1" transform="rotate(270 12 12)" opacity="0.8" />
+    <rect x="11" y="1" width="2" height="5" rx="1" transform="rotate(300 12 12)" opacity="0.9" />
+    <rect x="11" y="1" width="2" height="5" rx="1" transform="rotate(330 12 12)" opacity="1" />
+  </svg>
+);
+
 const StarIcon = ({ size = 12 }: { size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="#eab308" stroke="#eab308" strokeWidth="1">
     <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
@@ -72,7 +95,11 @@ export default function HomePage() {
               <span>GitHub</span>
               <span className="nav-github-stars">
                 <StarIcon size={11} />
-                <span>{stars !== null ? stars : '★'}</span>
+                {stars !== null ? (
+                  <span>{stars}</span>
+                ) : (
+                  <AppleSpinner size={11} />
+                )}
               </span>
             </a>
 
