@@ -1,4 +1,3 @@
 {
-  "framework": "vite",
-  "cleanUrls": true
+  "framework": "nextjs"
 }
