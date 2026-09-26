@@ -506,7 +506,7 @@ pub fn http_arm_request(
 
 #[tauri::command]
 pub fn delete_resource_native(resource_id: String) -> Result<String, String> {
-    run_az(&["resource", "delete", "--ids", &resource_id, "--verbose"])
+    run_az(&["resource", "delete", "--ids", &resource_id, "--yes", "--no-wait"])
 }
 
 

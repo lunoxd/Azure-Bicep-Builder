@@ -959,7 +959,7 @@ select.input {
   100% { transform: rotate(360deg); }
 }
 
-@keyframes apple-spin-steps {
+@keyframes apple-spin-smooth {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
@@ -969,9 +969,10 @@ select.input {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  animation: apple-spin-steps 0.8s steps(8, end) infinite;
+  animation: apple-spin-smooth 0.8s linear infinite;
   transform-origin: 50% 50%;
   will-change: transform;
+  transform: translateZ(0);
 }
 
 .animate-spin,
@@ -982,6 +983,7 @@ svg.spinning {
   animation: spin 0.8s linear infinite !important;
   transform-origin: 50% 50%;
   will-change: transform;
+  transform: translateZ(0);
 }
 
 .spinner {
@@ -996,6 +998,7 @@ svg.spinning {
   box-sizing: border-box;
   flex-shrink: 0;
   will-change: transform;
+  transform: translateZ(0);
 }
 
 
