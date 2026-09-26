@@ -127,12 +127,21 @@ export const DeployView: React.FC = () => {
         currentEnvironment.region
       );
 
+      const updateProgress = (msg: string) => {
+        setSteps((prev) =>
+          prev.map((step, i) =>
+            i === 0 ? { ...step, message: msg, status: 'running' } : step
+          )
+        );
+      };
+
       await deployBicep(
         gen.code,
         currentEnvironment.resourceGroup,
         currentEnvironment.region,
         selectedSubscription?.id || '',
-        currentEnvironment.resources
+        currentEnvironment.resources,
+        updateProgress
       );
 
       setSteps((prev) =>

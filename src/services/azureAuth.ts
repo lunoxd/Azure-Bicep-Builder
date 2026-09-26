@@ -608,11 +608,18 @@ export async function deployWithArmRestApi(
   subscriptionId: string,
   resourceGroup: string,
   region: string,
-  resources: any[]
+  resources: any[],
+  onProgress?: (msg: string) => void
 ): Promise<any> {
+  if (!resources || resources.length === 0) {
+    throw new Error('No resources to deploy. Please add at least one resource to your environment.');
+  }
+
   // Always get a valid (auto-refreshed) token before deployment
   const token = await getValidToken();
   const deploymentName = `bicep-studio-${Date.now()}`;
+
+  onProgress?.(`Provisioning resource group '${resourceGroup}'...`);
 
   // 1. Ensure Azure Resource Group exists first
   const rgUrl = `https://management.azure.com/subscriptions/${subscriptionId}/resourcegroups/${resourceGroup}?api-version=2021-04-01`;
@@ -633,6 +640,8 @@ export async function deployWithArmRestApi(
   // 2. Build sanitized ARM JSON template from resources
   const tenantId = getSavedAuthSession()?.account?.tenantId;
   const armTemplate = buildArmTemplate(resources, region, tenantId);
+
+  onProgress?.(`Submitting ARM deployment template (${resources.length} resources)...`);
 
   // 3. Trigger ARM Deployment PUT
   const deployUrl = `https://management.azure.com/subscriptions/${subscriptionId}/resourcegroups/${resourceGroup}/providers/Microsoft.Resources/deployments/${deploymentName}?api-version=2021-04-01`;
@@ -660,61 +669,77 @@ export async function deployWithArmRestApi(
     throw new Error(`Azure ARM Deployment failed (${res.status}): ${msg}`);
   }
 
-  // 4. Poll Azure ARM Deployment until completion (real cloud provisioning tracking)
+  // 4. Poll Azure ARM Deployment until completion
   const startTime = Date.now();
-  const maxTimeoutMs = 15 * 60 * 1000; // 15 mins timeout
-  const pollIntervalMs = 3500;
+  const maxTimeoutMs = 8 * 60 * 1000; // 8 min max
+  const pollIntervalMs = 4000;
+  let pollCount = 0;
 
   while (Date.now() - startTime < maxTimeoutMs) {
     await new Promise((r) => setTimeout(r, pollIntervalMs));
+    pollCount++;
 
     try {
-      const statusRes = await armRequest(deployUrl, {
-        method: 'GET',
-        token,
-      });
+      const statusRes = await armRequest(deployUrl, { method: 'GET', token });
 
-      if (statusRes.ok) {
-        const statusData = await statusRes.json();
-        const provState = statusData?.properties?.provisioningState;
-
-        if (provState === 'Succeeded') {
-          return statusData;
+      if (!statusRes.ok) {
+        const errBody = await statusRes.text();
+        // 401 → token expired mid-poll, throw immediately
+        if (statusRes.status === 401) {
+          throw new Error('Azure session expired during deployment. Please sign in again.');
         }
+        // Other transient errors: warn and retry
+        console.warn(`ARM poll attempt ${pollCount} returned ${statusRes.status}:`, errBody);
+        onProgress?.(`Azure provisioning... (checking status, attempt ${pollCount})`);
+        continue;
+      }
 
-        if (provState === 'Failed' || provState === 'Canceled') {
-          // Fetch detailed operation failure details
-          const opsUrl = `https://management.azure.com/subscriptions/${subscriptionId}/resourcegroups/${resourceGroup}/providers/Microsoft.Resources/deployments/${deploymentName}/operations?api-version=2021-04-01`;
-          try {
-            const opsRes = await armRequest(opsUrl, { method: 'GET', token });
-            if (opsRes.ok) {
-              const opsData = await opsRes.json();
-              const failedOp = (opsData.value || []).find(
-                (op: any) => op.properties?.provisioningState === 'Failed'
-              );
-              if (failedOp) {
-                const statusMsg = failedOp.properties?.statusMessage;
-                const errDetail = statusMsg?.error?.message || statusMsg?.message || JSON.stringify(statusMsg);
-                throw new Error(`Resource '${failedOp.properties?.targetResource?.resourceName || 'Unknown'}' failed in Azure: ${errDetail}`);
-              }
+      const statusData = await statusRes.json();
+      const provState = statusData?.properties?.provisioningState;
+
+      onProgress?.(`Azure deployment status: ${provState || 'Provisioning'} (${Math.round((Date.now() - startTime) / 1000)}s elapsed)`);
+
+      if (provState === 'Succeeded') {
+        return statusData;
+      }
+
+      if (provState === 'Failed' || provState === 'Canceled') {
+        // Fetch detailed operation failure details
+        const opsUrl = `https://management.azure.com/subscriptions/${subscriptionId}/resourcegroups/${resourceGroup}/providers/Microsoft.Resources/deployments/${deploymentName}/operations?api-version=2021-04-01`;
+        try {
+          const opsRes = await armRequest(opsUrl, { method: 'GET', token });
+          if (opsRes.ok) {
+            const opsData = await opsRes.json();
+            const failedOp = (opsData.value || []).find(
+              (op: any) => op.properties?.provisioningState === 'Failed'
+            );
+            if (failedOp) {
+              const statusMsg = failedOp.properties?.statusMessage;
+              const errDetail = statusMsg?.error?.message || statusMsg?.message || JSON.stringify(statusMsg);
+              throw new Error(`Resource '${failedOp.properties?.targetResource?.resourceName || 'Unknown'}' failed in Azure: ${errDetail}`);
             }
-          } catch (e: any) {
-            if (e.message?.includes('failed in Azure:')) throw e;
           }
-
-          const mainErr = statusData?.properties?.error?.message || JSON.stringify(statusData?.properties?.error || 'Deployment failed');
-          throw new Error(`Azure deployment '${deploymentName}' failed: ${mainErr}`);
+        } catch (e: any) {
+          if (e.message?.includes('failed in Azure:')) throw e;
         }
+
+        const mainErr = statusData?.properties?.error?.message || JSON.stringify(statusData?.properties?.error || 'Deployment failed');
+        throw new Error(`Azure deployment '${deploymentName}' failed: ${mainErr}`);
       }
     } catch (pollErr: any) {
-      if (pollErr.message?.includes('failed in Azure:') || pollErr.message?.includes('failed:')) {
+      if (
+        pollErr.message?.includes('failed in Azure:') ||
+        pollErr.message?.includes('failed:') ||
+        pollErr.message?.includes('session expired')
+      ) {
         throw pollErr;
       }
-      // network retry
+      // transient network error — retry
+      console.warn(`ARM poll attempt ${pollCount} error (retrying):`, pollErr.message);
     }
   }
 
-  return { status: 'Succeeded', properties: { provisioningState: 'Succeeded' } };
+  throw new Error('Azure deployment timed out after 8 minutes. Check the Azure Portal for status.');
 }
 
 /**

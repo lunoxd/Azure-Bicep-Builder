@@ -201,7 +201,8 @@ export async function deployBicep(
   resourceGroup: string,
   region: string,
   subscriptionId: string,
-  resources?: Resource[]
+  resources?: Resource[],
+  onProgress?: (msg: string) => void
 ): Promise<any> {
   // 1. Try Desktop native Tauri execution with `az deployment group create`
   if (isTauri()) {
@@ -218,16 +219,22 @@ export async function deployBicep(
   }
 
   // 2. Direct real Azure Resource Manager REST API Deployment
-  const { getSavedAuthSession, deployWithArmRestApi } = await import('../services/azureAuth');
-  const session = getSavedAuthSession();
+  const { getValidToken, deployWithArmRestApi } = await import('../services/azureAuth');
 
-  if (!session?.token?.access_token) {
+  let token: string;
+  try {
+    token = await getValidToken();
+  } catch {
     throw new Error(
       'Not connected to Azure. Please click "Connect Azure" in the top header and sign in to deploy to your real cloud environment.'
     );
   }
 
-  const activeSubId = subscriptionId || session.account.id;
+  if (!token) {
+    throw new Error('Azure authentication token is missing. Please sign in again.');
+  }
+
+  const activeSubId = subscriptionId || '';
   if (!activeSubId || activeSubId === 'local-session-id') {
     throw new Error('Please select a valid Azure Subscription in the Azure Connection modal.');
   }
@@ -236,7 +243,8 @@ export async function deployBicep(
     activeSubId,
     resourceGroup,
     region,
-    resources || []
+    resources || [],
+    onProgress
   );
 }
 
@@ -255,14 +263,17 @@ export async function deleteDeploymentResourceGroup(
     }
   }
 
-  const { getSavedAuthSession, deleteResourceGroupViaArm } = await import('../services/azureAuth');
-  const session = getSavedAuthSession();
+  const { getValidToken, deleteResourceGroupViaArm } = await import('../services/azureAuth');
 
-  if (!session?.token?.access_token) {
+  let token: string;
+  try {
+    token = await getValidToken();
+  } catch {
     throw new Error('Not connected to Azure. Please connect your Azure account first.');
   }
 
-  const activeSubId = subscriptionId || session.account.id;
+  void token; // used internally by deleteResourceGroupViaArm via getValidToken
+  const activeSubId = subscriptionId;
   return await deleteResourceGroupViaArm(activeSubId, resourceGroup);
 }
 
