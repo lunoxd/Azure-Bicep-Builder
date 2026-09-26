@@ -74,9 +74,9 @@ export default function HomePage() {
             scale={3.6}
             hueShift={0}
             colorFrequency={1}
-            noise={0.3}
-            glow={1.2}
-            bloom={1.2}
+            noise={0}
+            glow={1.1}
+            bloom={1.1}
             hoverStrength={2}
             transparent={true}
           />
@@ -186,22 +186,6 @@ export default function HomePage() {
           </div>
         </section>
       </div>
-
-      {/* Footer */}
-      <footer className="landing-footer">
-        <div>
-          Azure Bicep Builder (ABB) • Open Source Visual Cloud Studio
-        </div>
-        <div style={{ display: 'flex', gap: '16px' }}>
-          <a href="https://github.com/lunoxd/Azure-Bicep-Builder" target="_blank" rel="noreferrer">
-            GitHub Repository
-          </a>
-          <span>•</span>
-          <a href="#downloads">Downloads</a>
-          <span>•</span>
-          <span>MIT License</span>
-        </div>
-      </footer>
     </div>
   );
 }
