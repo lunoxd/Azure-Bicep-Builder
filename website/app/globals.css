@@ -164,25 +164,24 @@ body {
   box-shadow: 0 4px 14px rgba(255, 255, 255, 0.25);
 }
 
-/* Hero Section with 3D Prism */
+/* Hero Section with 3D Prism from React Bits */
 .hero-wrapper {
   position: relative;
   width: 100%;
+  min-height: 580px;
   overflow: hidden;
 }
 
 .hero-prism-bg {
   position: absolute;
-  top: -20px;
-  left: 50%;
-  transform: translateX(-50%);
+  inset: 0;
   width: 100%;
-  max-width: 1200px;
-  height: 620px;
+  height: 100%;
   pointer-events: auto;
   z-index: 0;
-  opacity: 0.85;
+  opacity: 0.9;
 }
+
 
 .hero {
   padding: 80px 24px 70px;
