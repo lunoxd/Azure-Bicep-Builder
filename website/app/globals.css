@@ -188,7 +188,11 @@ body {
 .hero-wrapper {
   position: relative;
   width: 100%;
-  min-height: 600px;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 160px);
   overflow: hidden;
 }
 
@@ -203,7 +207,7 @@ body {
 }
 
 .hero {
-  padding: 80px 24px 70px;
+  padding: 60px 24px 70px;
   text-align: center;
   max-width: 980px;
   margin: 0 auto;
