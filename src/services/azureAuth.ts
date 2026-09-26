@@ -244,6 +244,143 @@ export async function fetchAzureSubscriptions(accessToken: string): Promise<{
 }
 
 /**
+ * Helper to build valid Azure Resource Manager (ARM) JSON template from visual resources
+ */
+export function buildArmTemplate(resources: any[], region: string, tenantId: string = '') {
+  const armResources = resources.map((r) => {
+    // 1. Resolve dependsOn references safely (ignore raw UUIDs not found in resources)
+    const validDependsOn = (r.dependsOn || [])
+      .map((depId: string) => {
+        const depRes = resources.find((x) => x.id === depId);
+        return depRes ? `[resourceId('${depRes.type}', '${depRes.name}')]` : null;
+      })
+      .filter((d: string | null): d is string => d !== null);
+
+    const baseRes: any = {
+      type: r.type,
+      apiVersion: getApiVersionForType(r.type),
+      name: r.name,
+      location: region,
+    };
+
+    if (validDependsOn.length > 0) {
+      baseRes.dependsOn = validDependsOn;
+    }
+
+    // 2. Format resource-specific ARM properties
+    switch (r.type) {
+      case 'Microsoft.Storage/storageAccounts': {
+        // Storage account names must be lowercase alphanumeric only (3-24 chars)
+        const cleanName = r.name.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 24);
+        baseRes.name = cleanName.length >= 3 ? cleanName : `${cleanName}stg01`;
+        baseRes.sku = { name: r.properties?.sku || 'Standard_LRS' };
+        baseRes.kind = r.properties?.kind || 'StorageV2';
+        baseRes.properties = {
+          accessTier: r.properties?.accessTier || 'Hot',
+          supportsHttpsTrafficOnly: true,
+          minimumTlsVersion: 'TLS1_2',
+        };
+        break;
+      }
+
+      case 'Microsoft.Web/serverfarms': {
+        baseRes.sku = {
+          name: r.properties?.skuName || 'B1',
+          tier: r.properties?.skuTier || 'Basic',
+        };
+        baseRes.kind = 'linux';
+        baseRes.properties = {
+          reserved: true,
+        };
+        break;
+      }
+
+      case 'Microsoft.Web/sites': {
+        const aspRes = resources.find((x) => x.type === 'Microsoft.Web/serverfarms');
+        baseRes.properties = {
+          serverFarmId: aspRes ? `[resourceId('Microsoft.Web/serverfarms', '${aspRes.name}')]` : undefined,
+          httpsOnly: true,
+          siteConfig: {
+            linuxFxVersion: r.properties?.runtime || 'NODE|18-lts',
+          },
+        };
+        break;
+      }
+
+      case 'Microsoft.Network/virtualNetworks': {
+        baseRes.properties = {
+          addressSpace: {
+            addressPrefixes: [r.properties?.addressSpace || '10.0.0.0/16'],
+          },
+          subnets: (r.properties?.subnets || [{ name: 'default', addressPrefix: '10.0.0.0/24' }]).map((s: any) => ({
+            name: s.name,
+            properties: { addressPrefix: s.addressPrefix || '10.0.0.0/24' },
+          })),
+        };
+        break;
+      }
+
+      case 'Microsoft.KeyVault/vaults': {
+        baseRes.properties = {
+          sku: { family: 'A', name: r.properties?.sku || 'standard' },
+          tenantId: tenantId || 'organizations',
+          accessPolicies: [],
+          enableRbacAuthorization: true,
+        };
+        break;
+      }
+
+      case 'Microsoft.DBforPostgreSQL/flexibleServers': {
+        baseRes.sku = {
+          name: r.properties?.skuName || 'Standard_B1ms',
+          tier: r.properties?.skuTier || 'Burstable',
+        };
+        baseRes.properties = {
+          version: r.properties?.version || '16',
+          administratorLogin: r.properties?.administratorLogin || 'pgadmin',
+          administratorLoginPassword: 'P@ssw0rdAzureBicep2026!',
+          storage: {
+            storageSizeGB: parseInt(r.properties?.storageSizeGB || '32', 10),
+          },
+        };
+        break;
+      }
+
+      default: {
+        baseRes.properties = r.properties || {};
+        break;
+      }
+    }
+
+    return baseRes;
+  });
+
+  return {
+    $schema: 'https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#',
+    contentVersion: '1.0.0.0',
+    resources: armResources,
+  };
+}
+
+function getApiVersionForType(type: string): string {
+  switch (type) {
+    case 'Microsoft.Network/virtualNetworks':
+      return '2023-09-01';
+    case 'Microsoft.Storage/storageAccounts':
+      return '2023-01-01';
+    case 'Microsoft.Web/serverfarms':
+    case 'Microsoft.Web/sites':
+      return '2022-09-01';
+    case 'Microsoft.KeyVault/vaults':
+      return '2023-07-01';
+    case 'Microsoft.DBforPostgreSQL/flexibleServers':
+      return '2023-03-01-preview';
+    default:
+      return '2021-04-01';
+  }
+}
+
+/**
  * 4. Real Azure Resource Manager Template Deployment via REST API
  */
 export async function deployWithArmRestApi(
@@ -282,22 +419,8 @@ export async function deployWithArmRestApi(
     console.warn('Failed to pre-provision resource group:', rgError);
   }
 
-  // 2. Build ARM JSON template from resources
-  const armTemplate = {
-    $schema: 'https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#',
-    contentVersion: '1.0.0.0',
-    resources: resources.map((r) => ({
-      type: r.type,
-      apiVersion: getApiVersionForType(r.type),
-      name: r.name,
-      location: region,
-      properties: r.properties || {},
-      dependsOn: (r.dependsOn || []).map((depId: string) => {
-        const depRes = resources.find((x) => x.id === depId);
-        return depRes ? `[resourceId('${depRes.type}', '${depRes.name}')]` : depId;
-      }),
-    })),
-  };
+  // 2. Build sanitized ARM JSON template from resources
+  const armTemplate = buildArmTemplate(resources, region, session.account?.tenantId);
 
   // 3. Trigger ARM Deployment PUT
   const deployUrl = `https://management.azure.com/subscriptions/${subscriptionId}/resourcegroups/${resourceGroup}/providers/Microsoft.Resources/deployments/${deploymentName}?api-version=2021-04-01`;
@@ -357,24 +480,6 @@ export async function deleteResourceGroupViaArm(
   return { status: 'Deleted', resourceGroup };
 }
 
-function getApiVersionForType(type: string): string {
-  switch (type) {
-    case 'Microsoft.Network/virtualNetworks':
-      return '2023-09-01';
-    case 'Microsoft.Storage/storageAccounts':
-      return '2023-01-01';
-    case 'Microsoft.Web/serverfarms':
-    case 'Microsoft.Web/sites':
-      return '2022-09-01';
-    case 'Microsoft.KeyVault/vaults':
-      return '2023-07-01';
-    case 'Microsoft.DBforPostgreSQL/flexibleServers':
-      return '2023-03-01-preview';
-    default:
-      return '2021-04-01';
-  }
-}
-
 /**
  * 5. Real Azure What-If Analysis via REST API
  */
@@ -410,17 +515,7 @@ export async function whatIfWithArmRestApi(
     console.warn('What-If resource group notice:', e);
   }
 
-  const armTemplate = {
-    $schema: 'https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#',
-    contentVersion: '1.0.0.0',
-    resources: resources.map((r) => ({
-      type: r.type,
-      apiVersion: getApiVersionForType(r.type),
-      name: r.name,
-      location: region,
-      properties: r.properties || {},
-    })),
-  };
+  const armTemplate = buildArmTemplate(resources, region, session.account?.tenantId);
 
   const whatIfUrl = `https://management.azure.com/subscriptions/${subscriptionId}/resourcegroups/${resourceGroup}/providers/Microsoft.Resources/deployments/${deploymentName}/whatIf?api-version=2021-04-01`;
   const proxyUrl = whatIfUrl.replace('https://management.azure.com', '/api/azure-arm');
