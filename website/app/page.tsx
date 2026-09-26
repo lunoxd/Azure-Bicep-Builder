@@ -105,7 +105,7 @@ export default function HomePage() {
         <section className="hero">
           <div className="hero-content">
             <h1 className="hero-title">
-              Visual Infrastructure Studio<br />
+              Visual Infrastructure Builder<br />
               <span className="hero-title-gradient">Engineered for Azure Bicep</span>
             </h1>
 
