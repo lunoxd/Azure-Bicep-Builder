@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useEnvironmentStore, useDeploymentStore, useAzureStore, useUIStore } from '../../stores';
 import { generateBicepCode, deployBicep, deleteDeploymentResourceGroup } from '../../hooks/useTauri';
+import { fetchSubscriptionLocations } from '../../services/azureAuth';
 import type { DeploymentStep, DeploymentStatus } from '../../types';
 import {
   Rocket,
@@ -13,20 +14,33 @@ import {
   Layers,
   AlertTriangle,
   Sparkles,
+  Globe,
 } from 'lucide-react';
 
-const AZURE_REGIONS = [
+const DEFAULT_REGIONS = [
+  { id: 'eastasia', name: 'East Asia', studentRecommended: true },
+  { id: 'southeastasia', name: 'Southeast Asia', studentRecommended: true },
+  { id: 'centralindia', name: 'Central India', studentRecommended: true },
+  { id: 'southindia', name: 'South India', studentRecommended: true },
+  { id: 'japaneast', name: 'Japan East', studentRecommended: true },
+  { id: 'koreacentral', name: 'Korea Central', studentRecommended: true },
   { id: 'eastus', name: 'East US', studentRecommended: true },
   { id: 'eastus2', name: 'East US 2', studentRecommended: true },
   { id: 'westus2', name: 'West US 2', studentRecommended: true },
-  { id: 'westeurope', name: 'West Europe', studentRecommended: true },
-  { id: 'northeurope', name: 'North Europe', studentRecommended: true },
   { id: 'centralus', name: 'Central US', studentRecommended: true },
   { id: 'southcentralus', name: 'South Central US', studentRecommended: true },
-  { id: 'southeastasia', name: 'Southeast Asia', studentRecommended: true },
-  { id: 'westus', name: 'West US', studentRecommended: false },
-  { id: 'uksouth', name: 'UK South', studentRecommended: false },
-  { id: 'australiaeast', name: 'Australia East', studentRecommended: false },
+  { id: 'westeurope', name: 'West Europe', studentRecommended: true },
+  { id: 'northeurope', name: 'North Europe', studentRecommended: true },
+  { id: 'uksouth', name: 'UK South', studentRecommended: true },
+  { id: 'australiaeast', name: 'Australia East', studentRecommended: true },
+  { id: 'canadacentral', name: 'Canada Central', studentRecommended: false },
+  { id: 'francecentral', name: 'France Central', studentRecommended: false },
+  { id: 'germanywestcentral', name: 'Germany West Central', studentRecommended: false },
+  { id: 'switzerlandnorth', name: 'Switzerland North', studentRecommended: false },
+  { id: 'swedencentral', name: 'Sweden Central', studentRecommended: false },
+  { id: 'uaenorth', name: 'UAE North', studentRecommended: false },
+  { id: 'brazilsouth', name: 'Brazil South', studentRecommended: false },
+  { id: 'southafricanorth', name: 'South Africa North', studentRecommended: false },
 ];
 
 export const DeployView: React.FC = () => {
@@ -35,6 +49,7 @@ export const DeployView: React.FC = () => {
   const { setAzureConnectionModalOpen } = useUIStore();
   const { isDeploying, setIsDeploying, addToHistory } = useDeploymentStore();
 
+  const [regions, setRegions] = useState(DEFAULT_REGIONS);
   const [steps, setSteps] = useState<DeploymentStep[]>([]);
   const [overallStatus, setOverallStatus] = useState<DeploymentStatus>(
     currentEnvironment?.status === 'deployed' ? 'succeeded' : 'pending'
@@ -44,6 +59,22 @@ export const DeployView: React.FC = () => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteSuccessMsg, setDeleteSuccessMsg] = useState<string | null>(null);
+
+  // Fetch subscription's real Azure regions dynamically if logged in
+  useEffect(() => {
+    if (loginStatus.loggedIn && selectedSubscription?.id) {
+      fetchSubscriptionLocations(selectedSubscription.id).then((liveLocs) => {
+        if (liveLocs && liveLocs.length > 0) {
+          const merged = liveLocs.map((loc) => ({
+            id: loc.id,
+            name: loc.displayName || loc.name,
+            studentRecommended: ['eastasia', 'southeastasia', 'centralindia', 'eastus', 'eastus2', 'westus2', 'westeurope', 'centralus'].includes(loc.id),
+          }));
+          setRegions(merged);
+        }
+      });
+    }
+  }, [loginStatus.loggedIn, selectedSubscription?.id]);
 
   if (!currentEnvironment) {
     return (
@@ -213,7 +244,7 @@ export const DeployView: React.FC = () => {
           </div>
         </div>
 
-        {/* Interactive Region Selector */}
+        {/* Interactive Region Selector with East Asia & Global Azure Regions */}
         <div className="card" style={{ padding: '14px 16px', background: '#18181b', border: '1px solid #27272a' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontWeight: 600 }}>Deployment Region</div>
@@ -236,7 +267,7 @@ export const DeployView: React.FC = () => {
               onChange={(e) => handleQuickRegionSwitch(e.target.value)}
               disabled={isDeploying || isDeleting}
             >
-              {AZURE_REGIONS.map((r) => (
+              {regions.map((r) => (
                 <option key={r.id} value={r.id}>
                   {r.name} ({r.id}) {r.studentRecommended ? '⭐ (Student)' : ''}
                 </option>
@@ -253,7 +284,7 @@ export const DeployView: React.FC = () => {
         </div>
       </div>
 
-      {/* Azure Student / Free Tier Policy Advisory Banner */}
+      {/* Azure Student / Free Tier Policy Advisory Banner with East Asia */}
       {isPolicyError && (
         <div
           className="card"
@@ -268,19 +299,21 @@ export const DeployView: React.FC = () => {
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
             <Sparkles size={20} color="#10b981" />
             <h3 style={{ fontSize: '15px', fontWeight: 800, color: '#fafafa', margin: 0 }}>
-              Azure for Students / Free Tier Regional Policy Detected
+              Azure for Students Regional Policy Detected
             </h3>
           </div>
           <p style={{ fontSize: '12px', color: '#fafafa', margin: '0 0 14px 0', lineHeight: 1.5 }}>
-            Microsoft Azure restricts student & trial accounts to specific high-capacity cloud regions. Click below to switch to an authorized region and deploy instantly:
+            Your Azure subscription allows deployment to designated regions. Choose your target region below and retry:
           </p>
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
             {[
-              { id: 'eastus', label: 'East US (eastus)' },
-              { id: 'eastus2', label: 'East US 2 (eastus2)' },
-              { id: 'westus2', label: 'West US 2 (westus2)' },
-              { id: 'westeurope', label: 'West Europe (westeurope)' },
-              { id: 'centralus', label: 'Central US (centralus)' },
+              { id: 'eastasia', label: '⭐ East Asia (eastasia)' },
+              { id: 'southeastasia', label: '⭐ Southeast Asia (southeastasia)' },
+              { id: 'centralindia', label: '⭐ Central India (centralindia)' },
+              { id: 'japaneast', label: '⭐ Japan East (japaneast)' },
+              { id: 'eastus', label: '⭐ East US (eastus)' },
+              { id: 'eastus2', label: '⭐ East US 2 (eastus2)' },
+              { id: 'westeurope', label: '⭐ West Europe (westeurope)' },
             ].map((reg) => (
               <button
                 key={reg.id}
@@ -290,6 +323,7 @@ export const DeployView: React.FC = () => {
                   color: currentEnvironment.region === reg.id ? '#ffffff' : '#fafafa',
                   borderColor: currentEnvironment.region === reg.id ? '#10b981' : '#3f3f46',
                   fontWeight: 700,
+                  padding: '6px 12px',
                 }}
                 onClick={() => handleQuickRegionSwitch(reg.id)}
               >
@@ -439,7 +473,7 @@ export const DeployView: React.FC = () => {
             <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.5, margin: '0 0 20px 0' }}>
               This will permanently delete the Azure Resource Group{' '}
               <strong style={{ color: '#fafafa', fontFamily: 'monospace' }}>{currentEnvironment.resourceGroup}</strong> and all {currentEnvironment.resources.length} associated resources in subscription{' '}
-              <strong style={{ color: '#fafafa' }}>{selectedSubscription?.name}</strong>.
+              <strong style={{ color: '#fafafa' }}>{selectedSubscription?.name}</strong> ({currentEnvironment.region}).
             </p>
             <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
               <button className="btn btn-secondary" onClick={() => setShowDeleteConfirm(false)}>
@@ -475,7 +509,8 @@ export const DeployView: React.FC = () => {
       {/* Step-by-Step Progress Timeline */}
       {steps.length > 0 && (
         <div className="card" style={{ padding: '20px', background: '#18181b', border: '1px solid #27272a', borderRadius: '12px' }}>
-          <div style={{ fontSize: '14px', fontWeight: 700, color: '#fafafa', marginBottom: '14px' }}>
+          <div style={{ fontSize: '14px', fontWeight: 700, color: '#fafafa', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Globe size={16} color="#10b981" />
             Deployment Execution Progress ({currentEnvironment.region})
           </div>
           <div className="deploy-timeline">

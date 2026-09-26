@@ -244,6 +244,32 @@ export async function fetchAzureSubscriptions(accessToken: string): Promise<{
 }
 
 /**
+ * 3b. Fetch available Azure regions/locations for a specific subscription
+ */
+export async function fetchSubscriptionLocations(
+  subscriptionId: string,
+  accessToken?: string
+): Promise<{ id: string; name: string; displayName: string }[]> {
+  const token = accessToken || getSavedAuthSession()?.token?.access_token;
+  if (!token) return [];
+
+  const locationsUrl = `https://management.azure.com/subscriptions/${subscriptionId}/locations?api-version=2020-01-01`;
+  try {
+    const data = await getJson(locationsUrl, token);
+    if (data?.value && Array.isArray(data.value)) {
+      return data.value.map((loc: any) => ({
+        id: loc.name,
+        name: loc.displayName || loc.name,
+        displayName: loc.displayName || loc.name,
+      }));
+    }
+  } catch (err) {
+    console.warn('Subscription locations fetch notice:', err);
+  }
+  return [];
+}
+
+/**
  * Helper to build valid Azure Resource Manager (ARM) JSON template from visual resources
  */
 export function buildArmTemplate(resources: any[], region: string, tenantId: string = '') {
