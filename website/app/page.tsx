@@ -22,6 +22,10 @@ import {
   FileCode,
 } from 'lucide-react';
 import Prism from './components/Prism';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from './components/ui/card';
+import { Badge } from './components/ui/badge';
+import { Button } from './components/ui/button';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from './components/ui/tabs';
 
 const GithubIcon = ({ size = 16 }: { size?: number }) => (
 
@@ -180,7 +184,7 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
         <section className="hero">
           <div className="hero-content">
             <div className="hero-badge">
-              <span className="hero-badge-tag">v0.1.0 Release</span>
+              <Badge variant="blurple">v0.1.0 Release</Badge>
               <span>Open Source Local-First Architecture Studio</span>
             </div>
 
@@ -194,32 +198,23 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
               inspect live cloud spending & credits, and deploy directly to Microsoft Azure with 1-click.
             </p>
 
-            {/* Download Group */}
+            {/* Download Group using shadcn Tabs */}
             <div className="download-group-container" id="downloads">
-              <div className="download-tabs">
-                <button
-                  className={`download-tab ${activeTab === 'macos' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('macos')}
-                >
-                  <Cpu size={16} /> macOS (Apple Silicon & Intel)
-                </button>
-                <button
-                  className={`download-tab ${activeTab === 'windows' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('windows')}
-                >
-                  <Terminal size={16} /> Windows (x64 / ARM64)
-                </button>
-                <button
-                  className={`download-tab ${activeTab === 'linux' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('linux')}
-                >
-                  <Server size={16} /> Linux / Source
-                </button>
-              </div>
+              <Tabs defaultValue="macos" value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
+                <TabsList style={{ margin: '0 auto 20px', display: 'flex', justifyContent: 'center' }}>
+                  <TabsTrigger value="macos">
+                    <Cpu size={15} /> macOS
+                  </TabsTrigger>
+                  <TabsTrigger value="windows">
+                    <Terminal size={15} /> Windows
+                  </TabsTrigger>
+                  <TabsTrigger value="linux">
+                    <Server size={15} /> Linux / Source
+                  </TabsTrigger>
+                </TabsList>
 
-              <div className="download-cards-grid">
-                {activeTab === 'macos' && (
-                  <>
+                <TabsContent value="macos">
+                  <div className="download-cards-grid">
                     <a
                       href="/downloads/Azure-Bicep-Builder-macOS.dmg"
                       download
@@ -234,11 +229,11 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
                     >
                       <FolderDown size={18} /> Download macOS .ZIP (3.9 MB)
                     </a>
-                  </>
-                )}
+                  </div>
+                </TabsContent>
 
-                {activeTab === 'windows' && (
-                  <>
+                <TabsContent value="windows">
+                  <div className="download-cards-grid">
                     <a
                       href="https://github.com/lunoxd/Azure-Bicep-Builder/releases"
                       target="_blank"
@@ -255,11 +250,11 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
                     >
                       <ExternalLink size={16} /> GitHub Windows Releases
                     </a>
-                  </>
-                )}
+                  </div>
+                </TabsContent>
 
-                {activeTab === 'linux' && (
-                  <>
+                <TabsContent value="linux">
+                  <div className="download-cards-grid">
                     <a
                       href="https://github.com/lunoxd/Azure-Bicep-Builder/releases"
                       target="_blank"
@@ -276,18 +271,15 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
                     >
                       <GithubIcon size={16} /> Build from Source (Cargo + Vite)
                     </a>
-                  </>
-                )}
-              </div>
+                  </div>
+                </TabsContent>
+              </Tabs>
 
               <div className="hero-meta">
-                <span>✨ 100% Local-first</span>
-                <span>•</span>
-                <span>🔒 No telemetry or tracker</span>
-                <span>•</span>
-                <span>⚡ Instant ARM REST & az CLI support</span>
-                <span>•</span>
-                <span>📄 MIT Licensed</span>
+                <Badge variant="secondary">✨ Local-first</Badge>
+                <Badge variant="secondary">🔒 No telemetry</Badge>
+                <Badge variant="secondary">⚡ ARM REST & CLI</Badge>
+                <Badge variant="secondary">📄 MIT Licensed</Badge>
               </div>
             </div>
           </div>
@@ -296,13 +288,12 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
 
       {/* App Interactive Preview */}
       <section className="preview-section">
-
         <div className="preview-frame">
           <div className="preview-header">
             <div className="preview-dots">
-              <div className="preview-dot" style={{ background: '#ef4444' }} />
-              <div className="preview-dot" style={{ background: '#f59e0b' }} />
-              <div className="preview-dot" style={{ background: '#10b981' }} />
+              <div className="preview-dot" style={{ background: '#da373c' }} />
+              <div className="preview-dot" style={{ background: '#f0b232' }} />
+              <div className="preview-dot" style={{ background: '#23a55a' }} />
             </div>
             <div className="preview-title">Azure Bicep Builder — Visual Workspace & Live Synchronizer</div>
             <div style={{ width: '40px' }} />
@@ -311,58 +302,58 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
           <div className="preview-body">
             {/* Visual Canvas Card */}
             <div className="preview-card">
-              <div style={{ fontSize: '11px', fontWeight: 700, color: '#a1a1aa', textTransform: 'uppercase', marginBottom: '12px', letterSpacing: '0.05em' }}>
+              <div style={{ fontSize: '11px', fontWeight: 700, color: '#949ba4', textTransform: 'uppercase', marginBottom: '12px', letterSpacing: '0.05em' }}>
                 Visual Architecture Canvas
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                <div style={{ background: '#121215', border: '1px solid #27272a', borderRadius: '8px', padding: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ background: '#2b2d31', border: '1px solid #383a40', borderRadius: '8px', padding: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                     <div style={{ width: '30px', height: '30px', borderRadius: '6px', background: '#1e3a8a', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#93c5fd' }}>
                       <Server size={16} />
                     </div>
                     <div>
                       <div style={{ fontSize: '13px', fontWeight: 700 }}>vm-linux-app-01</div>
-                      <div style={{ fontSize: '11px', color: '#a1a1aa' }}>Standard_B2s • Ubuntu 22.04</div>
+                      <div style={{ fontSize: '11px', color: '#b5bac1' }}>Standard_B2s • Ubuntu 22.04</div>
                     </div>
                   </div>
-                  <span style={{ fontSize: '11px', background: '#18181b', border: '1px solid #27272a', padding: '2px 8px', borderRadius: '4px', color: '#60a5fa' }}>Compute</span>
+                  <Badge variant="blurple">Compute</Badge>
                 </div>
 
-                <div style={{ textAlign: 'center', color: '#71717a', fontSize: '11px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+                <div style={{ textAlign: 'center', color: '#949ba4', fontSize: '11px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
                   <span>↓ dependsOn subnet & nic</span>
                 </div>
 
-                <div style={{ background: '#121215', border: '1px solid #27272a', borderRadius: '8px', padding: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ background: '#2b2d31', border: '1px solid #383a40', borderRadius: '8px', padding: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                     <div style={{ width: '30px', height: '30px', borderRadius: '6px', background: '#064e3b', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6ee7b7' }}>
                       <Globe size={16} />
                     </div>
                     <div>
                       <div style={{ fontSize: '13px', fontWeight: 700 }}>vnet-primary-eastus</div>
-                      <div style={{ fontSize: '11px', color: '#a1a1aa' }}>10.0.0.0/16 • 1 Subnet</div>
+                      <div style={{ fontSize: '11px', color: '#b5bac1' }}>10.0.0.0/16 • 1 Subnet</div>
                     </div>
                   </div>
-                  <span style={{ fontSize: '11px', background: '#18181b', border: '1px solid #27272a', padding: '2px 8px', borderRadius: '4px', color: '#34d399' }}>Network</span>
+                  <Badge variant="success">Network</Badge>
                 </div>
 
-                <div style={{ background: '#121215', border: '1px solid #27272a', borderRadius: '8px', padding: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ background: '#2b2d31', border: '1px solid #383a40', borderRadius: '8px', padding: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                     <div style={{ width: '30px', height: '30px', borderRadius: '6px', background: '#4c1d95', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#c4b5fd' }}>
                       <Database size={16} />
                     </div>
                     <div>
                       <div style={{ fontSize: '13px', fontWeight: 700 }}>pg-flexible-db</div>
-                      <div style={{ fontSize: '11px', color: '#a1a1aa' }}>Standard_B1ms • PostgreSQL 16</div>
+                      <div style={{ fontSize: '11px', color: '#b5bac1' }}>Standard_B1ms • PostgreSQL 16</div>
                     </div>
                   </div>
-                  <span style={{ fontSize: '11px', background: '#18181b', border: '1px solid #27272a', padding: '2px 8px', borderRadius: '4px', color: '#a78bfa' }}>Database</span>
+                  <Badge variant="outline">Database</Badge>
                 </div>
               </div>
             </div>
 
             {/* Generated Code Card */}
             <div className="preview-card">
-              <div style={{ fontSize: '11px', fontWeight: 700, color: '#a1a1aa', textTransform: 'uppercase', marginBottom: '12px', letterSpacing: '0.05em' }}>
+              <div style={{ fontSize: '11px', fontWeight: 700, color: '#949ba4', textTransform: 'uppercase', marginBottom: '12px', letterSpacing: '0.05em' }}>
                 Auto-Generated Azure Bicep Template
               </div>
               <div className="preview-code">{`targetScope = 'resourceGroup'
@@ -393,7 +384,7 @@ resource pgServer 'Microsoft.DBforPostgreSQL/flexibleServers@2023-03-01-preview'
         </div>
       </section>
 
-      {/* Features Grid */}
+      {/* Features Grid using shadcn Cards */}
       <section className="features-section" id="features">
         <h2 className="section-title">Engineered for Azure Cloud Teams</h2>
         <p className="section-subtitle">
@@ -401,65 +392,89 @@ resource pgServer 'Microsoft.DBforPostgreSQL/flexibleServers@2023-03-01-preview'
         </p>
 
         <div className="features-grid">
-          <div className="feature-card">
-            <div className="feature-icon-box">
-              <Layers size={22} />
-            </div>
-            <h3>Visual Drag & Drop Canvas</h3>
-            <p>
-              Link resources with visual wires. Declare dependency trees naturally and configure SKU tiers, network prefixes, and identities in a property panel.
-            </p>
-          </div>
+          <Card className="feature-card">
+            <CardHeader style={{ padding: 0 }}>
+              <div className="feature-icon-box">
+                <Layers size={22} />
+              </div>
+              <CardTitle>Visual Drag & Drop Canvas</CardTitle>
+            </CardHeader>
+            <CardContent style={{ padding: '8px 0 0 0' }}>
+              <CardDescription>
+                Link resources with visual wires. Declare dependency trees naturally and configure SKU tiers, network prefixes, and identities in a property panel.
+              </CardDescription>
+            </CardContent>
+          </Card>
 
-          <div className="feature-card">
-            <div className="feature-icon-box">
-              <FileCode size={22} />
-            </div>
-            <h3>Bidirectional Bicep Editor</h3>
-            <p>
-              Monaco-powered syntax editing with intelligent auto-completion. Canvas graph and Bicep source code stay in lockstep synchronization.
-            </p>
-          </div>
+          <Card className="feature-card">
+            <CardHeader style={{ padding: 0 }}>
+              <div className="feature-icon-box">
+                <FileCode size={22} />
+              </div>
+              <CardTitle>Bidirectional Bicep Editor</CardTitle>
+            </CardHeader>
+            <CardContent style={{ padding: '8px 0 0 0' }}>
+              <CardDescription>
+                Monaco-powered syntax editing with intelligent auto-completion. Canvas graph and Bicep source code stay in lockstep synchronization.
+              </CardDescription>
+            </CardContent>
+          </Card>
 
-          <div className="feature-card">
-            <div className="feature-icon-box">
-              <Rocket size={22} />
-            </div>
-            <h3>Direct Real ARM Deployments</h3>
-            <p>
-              Deploy straight to your Microsoft Azure subscription via Microsoft Entra ID Device Flow or local Azure CLI without managing custom API keys.
-            </p>
-          </div>
+          <Card className="feature-card">
+            <CardHeader style={{ padding: 0 }}>
+              <div className="feature-icon-box">
+                <Rocket size={22} />
+              </div>
+              <CardTitle>Direct Real ARM Deployments</CardTitle>
+            </CardHeader>
+            <CardContent style={{ padding: '8px 0 0 0' }}>
+              <CardDescription>
+                Deploy straight to your Microsoft Azure subscription via Microsoft Entra ID Device Flow or local Azure CLI without managing custom API keys.
+              </CardDescription>
+            </CardContent>
+          </Card>
 
-          <div className="feature-card">
-            <div className="feature-icon-box">
-              <ShieldCheck size={22} />
-            </div>
-            <h3>Azure What-If Delta Analysis</h3>
-            <p>
-              Evaluate the precise resource create, modify, and delete operations prior to deployment to prevent unexpected disruption or configuration drift.
-            </p>
-          </div>
+          <Card className="feature-card">
+            <CardHeader style={{ padding: 0 }}>
+              <div className="feature-icon-box">
+                <ShieldCheck size={22} />
+              </div>
+              <CardTitle>Azure What-If Delta Analysis</CardTitle>
+            </CardHeader>
+            <CardContent style={{ padding: '8px 0 0 0' }}>
+              <CardDescription>
+                Evaluate the precise resource create, modify, and delete operations prior to deployment to prevent unexpected disruption or configuration drift.
+              </CardDescription>
+            </CardContent>
+          </Card>
 
-          <div className="feature-card">
-            <div className="feature-icon-box">
-              <Sparkles size={22} />
-            </div>
-            <h3>Live Credits & Spending Tracker</h3>
-            <p>
-              Monitor your student grant or corporate subscription balance in real-time with automatic consumption API breakdown by service.
-            </p>
-          </div>
+          <Card className="feature-card">
+            <CardHeader style={{ padding: 0 }}>
+              <div className="feature-icon-box">
+                <Sparkles size={22} />
+              </div>
+              <CardTitle>Live Credits & Spending Tracker</CardTitle>
+            </CardHeader>
+            <CardContent style={{ padding: '8px 0 0 0' }}>
+              <CardDescription>
+                Monitor your student grant or corporate subscription balance in real-time with automatic consumption API breakdown by service.
+              </CardDescription>
+            </CardContent>
+          </Card>
 
-          <div className="feature-card">
-            <div className="feature-icon-box">
-              <Globe size={22} />
-            </div>
-            <h3>Zero-Orphan Clean Teardown</h3>
-            <p>
-              Resource Group boundary encapsulation guarantees that removing an environment cleans up all attached NICs, storage disks, and IPs cleanly.
-            </p>
-          </div>
+          <Card className="feature-card">
+            <CardHeader style={{ padding: 0 }}>
+              <div className="feature-icon-box">
+                <Globe size={22} />
+              </div>
+              <CardTitle>Zero-Orphan Clean Teardown</CardTitle>
+            </CardHeader>
+            <CardContent style={{ padding: '8px 0 0 0' }}>
+              <CardDescription>
+                Resource Group boundary encapsulation guarantees that removing an environment cleans up all attached NICs, storage disks, and IPs cleanly.
+              </CardDescription>
+            </CardContent>
+          </Card>
         </div>
       </section>
 
@@ -472,25 +487,26 @@ resource pgServer 'Microsoft.DBforPostgreSQL/flexibleServers@2023-03-01-preview'
 
         <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginBottom: '24px', flexWrap: 'wrap' }}>
           {blueprints.map((bp, idx) => (
-            <button
+            <Button
               key={idx}
-              className={`download-tab ${activeBlueprint === idx ? 'active' : ''}`}
+              variant={activeBlueprint === idx ? 'blurple' : 'secondary'}
+              size="sm"
               onClick={() => setActiveBlueprint(idx)}
             >
               {bp.title}
-            </button>
+            </Button>
           ))}
         </div>
 
         <div className="preview-frame" style={{ maxWidth: '960px', margin: '0 auto' }}>
           <div className="preview-header">
-            <span style={{ fontSize: '13px', fontWeight: 700, color: '#fafafa' }}>
+            <span style={{ fontSize: '13px', fontWeight: 700, color: '#f2f3f5' }}>
               {blueprints[activeBlueprint].title}
             </span>
-            <span className="blueprint-tag">{blueprints[activeBlueprint].tag}</span>
+            <Badge variant="blurple">{blueprints[activeBlueprint].tag}</Badge>
           </div>
-          <div style={{ padding: '20px', background: '#121215' }}>
-            <p style={{ color: '#a1a1aa', fontSize: '14px', marginBottom: '16px' }}>
+          <div style={{ padding: '20px', background: '#2b2d31' }}>
+            <p style={{ color: '#b5bac1', fontSize: '14px', marginBottom: '16px' }}>
               {blueprints[activeBlueprint].desc}
             </p>
             <div className="preview-code">{blueprints[activeBlueprint].code}</div>

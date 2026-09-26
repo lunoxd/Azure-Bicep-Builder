@@ -1,19 +1,19 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 
 :root {
-  --bg-primary: #09090b;
-  --bg-secondary: #121215;
-  --bg-card: #18181b;
-  --bg-card-hover: #222226;
-  --border-primary: #27272a;
-  --border-subtle: #1e1e24;
-  --border-glow: rgba(59, 130, 246, 0.4);
-  --text-primary: #fafafa;
-  --text-secondary: #a1a1aa;
-  --text-tertiary: #71717a;
-  --accent-blue: #3b82f6;
-  --accent-blue-hover: #2563eb;
-  --accent-emerald: #10b981;
+  --bg-primary: #1e1f22;          /* Discord Dark Base */
+  --bg-secondary: #2b2d31;        /* Discord Sidebar/Panel */
+  --bg-card: #2b2d31;             /* Discord Card Container */
+  --bg-card-hover: #35373c;       /* Discord Card Hover */
+  --border-primary: #383a40;      /* Discord Subtle Border */
+  --border-subtle: #2e3035;       /* Discord Dark Border */
+  --border-glow: rgba(88, 101, 242, 0.45); /* Discord Blurple Glow */
+  --text-primary: #f2f3f5;        /* Discord White Text */
+  --text-secondary: #b5bac1;      /* Discord Muted Text */
+  --text-tertiary: #949ba4;       /* Discord Subtle Text */
+  --accent-blue: #5865f2;         /* Discord Signature Blurple */
+  --accent-blue-hover: #4752c4;
+  --accent-emerald: #23a55a;      /* Discord Green */
   --accent-purple: #8b5cf6;
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
@@ -46,23 +46,23 @@ body {
   background: var(--bg-primary);
 }
 ::-webkit-scrollbar-thumb {
-  background: #27272a;
+  background: #2b2d31;
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #3f3f46;
+  background: #35373c;
 }
 
-/* Background Gradients & Glows */
+/* Background Gradients & Glows with Discord Theme */
 .bg-mesh {
   position: fixed;
   inset: 0;
   pointer-events: none;
   z-index: 0;
   background:
-    radial-gradient(circle at 50% 0%, rgba(59, 130, 246, 0.12) 0%, transparent 60%),
-    radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.08) 0%, transparent 50%),
-    radial-gradient(circle at 15% 70%, rgba(16, 185, 129, 0.06) 0%, transparent 50%);
+    radial-gradient(circle at 50% 0%, rgba(88, 101, 242, 0.18) 0%, transparent 65%),
+    radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.12) 0%, transparent 55%),
+    radial-gradient(circle at 15% 70%, rgba(35, 165, 90, 0.09) 0%, transparent 55%);
 }
 
 .landing-container {
@@ -279,18 +279,18 @@ body {
 .download-group-container {
   max-width: 720px;
   margin: 0 auto;
-  background: #121215;
-  border: 1px solid #27272a;
+  background: var(--bg-card);
+  border: 1px solid var(--border-primary);
   border-radius: 16px;
   padding: 24px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
 }
 
 .download-tabs {
   display: flex;
   gap: 8px;
   margin-bottom: 20px;
-  border-bottom: 1px solid #27272a;
+  border-bottom: 1px solid var(--border-primary);
   padding-bottom: 12px;
   justify-content: center;
 }
@@ -298,7 +298,7 @@ body {
 .download-tab {
   background: transparent;
   border: 1px solid transparent;
-  color: #a1a1aa;
+  color: var(--text-tertiary);
   padding: 8px 16px;
   border-radius: 8px;
   font-size: 13px;
@@ -311,9 +311,9 @@ body {
 }
 
 .download-tab.active {
-  background: #1e1e24;
+  background: #1e1f22;
   color: #ffffff;
-  border-color: #3f3f46;
+  border-color: var(--border-primary);
 }
 
 .download-tab:hover:not(.active) {
@@ -323,12 +323,12 @@ body {
 
 .download-cards-grid {
   display: grid;
-  grid-templateColumns: repeat(auto-fit, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 12px;
 }
 
 .btn-download-primary {
-  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  background: linear-gradient(135deg, #5865f2, #4752c4);
   color: #ffffff;
   display: flex;
   align-items: center;
@@ -341,16 +341,16 @@ body {
   text-decoration: none;
   transition: all 150ms;
   border: 1px solid rgba(255, 255, 255, 0.15);
-  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
+  box-shadow: 0 4px 14px rgba(88, 101, 242, 0.4);
 }
 
 .btn-download-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.6);
+  box-shadow: 0 6px 20px rgba(88, 101, 242, 0.6);
 }
 
 .btn-download-secondary {
-  background: #18181b;
+  background: #1e1f22;
   color: #fafafa;
   display: flex;
   align-items: center;
@@ -362,11 +362,11 @@ body {
   font-weight: 600;
   text-decoration: none;
   transition: all 150ms;
-  border: 1px solid #27272a;
+  border: 1px solid var(--border-primary);
 }
 
 .btn-download-secondary:hover {
-  background: #27272a;
+  background: #35373c;
   transform: translateY(-1px);
 }
 
@@ -389,11 +389,11 @@ body {
 }
 
 .preview-frame {
-  background: #121215;
-  border: 1px solid #27272a;
+  background: var(--bg-card);
+  border: 1px solid var(--border-primary);
   border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
 }
 
 .preview-header {
@@ -401,8 +401,8 @@ body {
   align-items: center;
   justify-content: space-between;
   padding: 12px 18px;
-  background: #18181b;
-  border-bottom: 1px solid #27272a;
+  background: #1e1f22;
+  border-bottom: 1px solid var(--border-primary);
 }
 
 .preview-dots {
@@ -436,15 +436,15 @@ body {
 }
 
 .preview-card {
-  background: #18181b;
-  border: 1px solid #27272a;
+  background: #1e1f22;
+  border: 1px solid var(--border-primary);
   border-radius: 10px;
   padding: 16px;
 }
 
 .preview-code {
-  background: #09090b;
-  border: 1px solid #27272a;
+  background: #111214;
+  border: 1px solid var(--border-primary);
   border-radius: 8px;
   padding: 14px;
   font-family: var(--font-mono);
@@ -486,26 +486,26 @@ body {
 }
 
 .feature-card {
-  background: #121215;
-  border: 1px solid #27272a;
+  background: var(--bg-card);
+  border: 1px solid var(--border-primary);
   border-radius: 14px;
   padding: 28px 24px;
   transition: all 200ms;
 }
 
 .feature-card:hover {
-  border-color: #3f3f46;
+  border-color: #5865f2;
   transform: translateY(-2px);
-  background: #151519;
+  background: var(--bg-card-hover);
 }
 
 .feature-icon-box {
   width: 44px;
   height: 44px;
   border-radius: 10px;
-  background: rgba(37, 99, 235, 0.15);
-  border: 1px solid rgba(37, 99, 235, 0.3);
-  color: #60a5fa;
+  background: rgba(88, 101, 242, 0.15);
+  border: 1px solid rgba(88, 101, 242, 0.3);
+  color: #808bf7;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -540,8 +540,8 @@ body {
 }
 
 .blueprint-card {
-  background: #121215;
-  border: 1px solid #27272a;
+  background: var(--bg-card);
+  border: 1px solid var(--border-primary);
   border-radius: 12px;
   padding: 20px;
   display: flex;
@@ -564,7 +564,8 @@ body {
 
 .blueprint-tag {
   font-size: 11px;
-  background: #1e1e24;
+  background: #1e1f22;
+  border: 1px solid var(--border-primary);
   padding: 2px 8px;
   border-radius: 4px;
   color: #93c5fd;
@@ -597,4 +598,214 @@ body {
 
 .landing-footer a:hover {
   color: var(--text-primary);
+}
+
+/* ===== shadcn UI System Styles ===== */
+.ui-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-primary);
+  border-radius: 14px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+  transition: all 200ms ease;
+}
+
+.ui-card:hover {
+  border-color: rgba(88, 101, 242, 0.4);
+  background-color: var(--bg-card-hover);
+}
+
+.ui-card-header {
+  padding: 20px 24px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ui-card-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+
+.ui-card-description {
+  font-size: 13.5px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.ui-card-content {
+  padding: 12px 24px 20px;
+}
+
+.ui-card-footer {
+  padding: 12px 24px 20px;
+  display: flex;
+  align-items: center;
+}
+
+/* shadcn Badge */
+.ui-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 9999px;
+  padding: 3px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  transition: all 150ms ease;
+  width: fit-content;
+}
+
+.ui-badge-default {
+  background-color: #2b2d31;
+  color: #f2f3f5;
+  border: 1px solid #3f4147;
+}
+
+.ui-badge-secondary {
+  background-color: #1e1f22;
+  color: #b5bac1;
+  border: 1px solid #2e3035;
+}
+
+.ui-badge-blurple {
+  background-color: rgba(88, 101, 242, 0.15);
+  color: #808bf7;
+  border: 1px solid rgba(88, 101, 242, 0.35);
+}
+
+.ui-badge-success {
+  background-color: rgba(35, 165, 90, 0.15);
+  color: #57f287;
+  border: 1px solid rgba(35, 165, 90, 0.35);
+}
+
+.ui-badge-outline {
+  background-color: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-primary);
+}
+
+/* shadcn Button */
+.ui-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: inherit;
+  font-weight: 600;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 150ms ease;
+  text-decoration: none;
+}
+
+.ui-btn-sm {
+  padding: 6px 12px;
+  font-size: 12px;
+}
+
+.ui-btn-md {
+  padding: 10px 18px;
+  font-size: 13.5px;
+}
+
+.ui-btn-lg {
+  padding: 14px 24px;
+  font-size: 15px;
+}
+
+.ui-btn-default {
+  background-color: #5865f2;
+  color: #ffffff;
+}
+.ui-btn-default:hover {
+  background-color: #4752c4;
+}
+
+.ui-btn-blurple {
+  background-color: #5865f2;
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(88, 101, 242, 0.4);
+}
+.ui-btn-blurple:hover {
+  background-color: #4752c4;
+  transform: translateY(-1px);
+}
+
+.ui-btn-white {
+  background-color: #ffffff;
+  color: #09090b;
+}
+.ui-btn-white:hover {
+  background-color: #f2f3f5;
+  transform: translateY(-1px);
+}
+
+.ui-btn-secondary {
+  background-color: #1e1f22;
+  color: #f2f3f5;
+  border-color: #383a40;
+}
+.ui-btn-secondary:hover {
+  background-color: #35373c;
+  transform: translateY(-1px);
+}
+
+.ui-btn-outline {
+  background-color: transparent;
+  color: var(--text-primary);
+  border-color: var(--border-primary);
+}
+.ui-btn-outline:hover {
+  background-color: #2b2d31;
+}
+
+/* shadcn Tabs */
+.ui-tabs {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+.ui-tabs-list {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background-color: #1e1f22;
+  border: 1px solid #383a40;
+  padding: 4px;
+  border-radius: 10px;
+  width: fit-content;
+}
+
+.ui-tabs-trigger {
+  background: transparent;
+  border: none;
+  color: #949ba4;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 150ms ease;
+}
+
+.ui-tabs-trigger:hover:not(.ui-tabs-trigger-active) {
+  color: #f2f3f5;
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.ui-tabs-trigger-active {
+  background-color: #2b2d31;
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 }
