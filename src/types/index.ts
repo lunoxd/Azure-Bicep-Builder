@@ -225,6 +225,8 @@ export interface LiveAzureResource {
 export type NavSection =
   | 'dashboard'
   | 'environments'
+  | 'credits'
+  | 'resources'
   | 'templates'
   | 'modules'
   | 'deployments'

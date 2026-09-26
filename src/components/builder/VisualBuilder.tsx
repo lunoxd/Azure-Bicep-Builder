@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback } from 'react';
 import {
   ReactFlow,
   MiniMap,
@@ -20,7 +20,7 @@ import { PropertiesPanel } from './PropertiesPanel';
 import { getResourceTypeInfo } from '../../data/resources';
 import type { ResourceType, Resource } from '../../types';
 import { v4 as uuidv4 } from 'uuid';
-import { ShieldCheck, Maximize2, RefreshCw } from 'lucide-react';
+import { ShieldCheck, Maximize2, RefreshCw, FolderArchive, Edit3, Check } from 'lucide-react';
 
 const nodeTypes = {
   azureResource: ResourceNode,
@@ -34,29 +34,57 @@ export const VisualBuilder: React.FC = () => {
     selectedResourceId,
     setSelectedResourceId,
     addDependency,
+    updateEnvironmentField,
   } = useEnvironmentStore();
 
   const { setRegionReplicationOpen } = useUIStore();
+  const [editingRg, setEditingRg] = React.useState(false);
+  const [rgInputValue, setRgInputValue] = React.useState(currentEnvironment?.resourceGroup || '');
 
-  // Convert environment resources to React Flow nodes
-  const initialNodes: Node[] = useMemo(() => {
-    if (!currentEnvironment) return [];
-    return currentEnvironment.resources.map((res) => ({
-      id: res.id,
-      type: 'azureResource',
-      position: res.position || { x: 100, y: 100 },
-      data: res as any,
-      selected: res.id === selectedResourceId,
-    }));
-  }, [currentEnvironment, selectedResourceId]);
+  React.useEffect(() => {
+    if (currentEnvironment?.resourceGroup) {
+      setRgInputValue(currentEnvironment.resourceGroup);
+    }
+  }, [currentEnvironment?.resourceGroup]);
 
-  // Convert resource dependencies to React Flow edges
-  const initialEdges: Edge[] = useMemo(() => {
-    if (!currentEnvironment) return [];
-    const edges: Edge[] = [];
+  const handleSaveRg = () => {
+    if (rgInputValue.trim()) {
+      updateEnvironmentField('resourceGroup', rgInputValue.trim());
+    }
+    setEditingRg(false);
+  };
+
+  // Synchronize React Flow nodes only when resources or environment change, without thrashing state
+  const envId = currentEnvironment?.id;
+  const resKey = currentEnvironment?.resources.map((r) => `${r.id}:${r.name}:${r.position?.x}:${r.position?.y}`).join('|') || '';
+
+  const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
+
+  React.useEffect(() => {
+    if (!currentEnvironment) {
+      setNodes([]);
+      setEdges([]);
+      return;
+    }
+
+    setNodes((prev) =>
+      currentEnvironment.resources.map((res) => {
+        const existing = prev.find((n) => n.id === res.id);
+        return {
+          id: res.id,
+          type: 'azureResource',
+          position: res.position || existing?.position || { x: 100, y: 100 },
+          data: res as any,
+          selected: res.id === selectedResourceId,
+        };
+      })
+    );
+
+    const newEdges: Edge[] = [];
     currentEnvironment.resources.forEach((res) => {
       res.dependsOn.forEach((targetId) => {
-        edges.push({
+        newEdges.push({
           id: `e-${res.id}-${targetId}`,
           source: targetId,
           target: res.id,
@@ -69,19 +97,8 @@ export const VisualBuilder: React.FC = () => {
         });
       });
     });
-    return edges;
-  }, [currentEnvironment]);
-
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
-
-  React.useEffect(() => {
-    setNodes(initialNodes);
-  }, [initialNodes, setNodes]);
-
-  React.useEffect(() => {
-    setEdges(initialEdges);
-  }, [initialEdges, setEdges]);
+    setEdges(newEdges);
+  }, [envId, resKey, selectedResourceId, setNodes, setEdges]);
 
   const onConnect = useCallback(
     (params: Connection) => {
@@ -199,22 +216,84 @@ export const VisualBuilder: React.FC = () => {
         {/* Top Canvas Action Bar */}
         <div
           style={{
-            height: '48px',
-            padding: '0 16px',
+            minHeight: '48px',
+            padding: '8px 16px',
             background: 'var(--bg-secondary)',
             borderBottom: '1px solid var(--border-primary)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
             zIndex: 4,
+            flexWrap: 'wrap',
+            gap: '10px',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+            {/* Resource Group Lifecycle Boundary Indicator */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                background: '#18181b',
+                border: '1px solid #27272a',
+                padding: '4px 10px',
+                borderRadius: '6px',
+              }}
+            >
+              <FolderArchive size={14} style={{ color: '#a1a1aa' }} />
+              <span style={{ fontSize: '11px', color: '#71717a', fontWeight: 600 }}>Resource Group:</span>
+              {editingRg ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <input
+                    type="text"
+                    value={rgInputValue}
+                    onChange={(e) => setRgInputValue(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleSaveRg();
+                      if (e.key === 'Escape') setEditingRg(false);
+                    }}
+                    autoFocus
+                    style={{
+                      background: '#09090b',
+                      border: '1px solid #3b82f6',
+                      color: '#fafafa',
+                      fontSize: '12px',
+                      padding: '2px 6px',
+                      borderRadius: '4px',
+                      fontFamily: 'monospace',
+                      outline: 'none',
+                    }}
+                  />
+                  <button
+                    onClick={handleSaveRg}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#10b981', display: 'flex', alignItems: 'center' }}
+                  >
+                    <Check size={14} />
+                  </button>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ fontSize: '12px', color: '#fafafa', fontWeight: 600, fontFamily: 'monospace' }}>
+                    {currentEnvironment?.resourceGroup || 'rg-default-eastus'}
+                  </span>
+                  <button
+                    onClick={() => setEditingRg(true)}
+                    title="Change Resource Group container"
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#71717a', display: 'flex', alignItems: 'center', padding: '2px' }}
+                  >
+                    <Edit3 size={11} />
+                  </button>
+                </div>
+              )}
+            </div>
+
             <span className="badge badge-success" style={{ fontSize: '11px', padding: '4px 10px' }}>
-              <ShieldCheck size={13} /> Architecture Validated
+              <ShieldCheck size={13} /> targetScope = 'resourceGroup'
             </span>
+
             <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-secondary)' }}>
-              {currentEnvironment?.resources.length || 0} Connected ARM Resources
+              {currentEnvironment?.resources.length || 0} Grouped Resources • {currentEnvironment?.region || 'eastus'}
             </span>
           </div>
 

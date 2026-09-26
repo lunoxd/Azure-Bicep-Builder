@@ -32,6 +32,8 @@ pub fn run() {
             commands::check_region_compatibility,
             commands::http_post_form,
             commands::http_get_json,
+            commands::http_arm_request,
+            commands::delete_resource_native,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -2,6 +2,7 @@ import React from 'react';
 import { useAzureStore } from '../../stores';
 import { azureLogin } from '../../hooks/useTauri';
 import { ShieldCheck, LogIn, AlertCircle } from 'lucide-react';
+import { AppleSpinner } from '../common/AppleSpinner';
 
 export const LoginScreen: React.FC<{ onSkip?: () => void }> = ({ onSkip }) => {
   const { setLoginStatus, setSelectedSubscription, loading, setLoading, error, setError } = useAzureStore();
@@ -29,7 +30,7 @@ export const LoginScreen: React.FC<{ onSkip?: () => void }> = ({ onSkip }) => {
       </div>
       <h2>Connect to Microsoft Azure</h2>
       <p>
-        Bicep Visual Studio operates local-first. We authenticate directly through your official Azure CLI
+        Azure Bicep Builder (ABB) operates local-first. We authenticate directly through your official Azure CLI
         session without ever storing passwords or client secrets.
       </p>
 
@@ -41,9 +42,10 @@ export const LoginScreen: React.FC<{ onSkip?: () => void }> = ({ onSkip }) => {
 
       <div style={{ display: 'flex', gap: '10px', marginTop: '8px' }}>
         <button className="btn btn-primary btn-lg" onClick={handleLogin} disabled={loading}>
-          {loading ? <span className="spinner" /> : <LogIn size={16} />}
+          {loading ? <AppleSpinner size={16} /> : <LogIn size={16} />}
           {loading ? 'Authenticating in browser...' : 'Sign in with Azure CLI'}
         </button>
+
         {onSkip && (
           <button className="btn btn-secondary btn-lg" onClick={onSkip}>
             Offline Mode

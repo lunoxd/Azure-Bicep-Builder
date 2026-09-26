@@ -77,34 +77,123 @@ async function postForm(url: string, formParams: Record<string, string>): Promis
   }
 }
 
+export interface ArmFetchResponse {
+  ok: boolean;
+  status: number;
+  statusText?: string;
+  json: () => Promise<any>;
+  text: () => Promise<string>;
+}
+
+/**
+ * Universal ARM REST API request runner
+ * In Tauri: Executes natively via curl/Rust (bypassing webview CORS entirely)
+ * In Dev Browser: Proxies through Vite /api/azure-arm
+ */
+export async function armRequest(
+  url: string,
+  options: {
+    method?: string;
+    token?: string;
+    body?: any;
+    headers?: Record<string, string>;
+  } = {}
+): Promise<ArmFetchResponse> {
+  const method = (options.method || 'GET').toUpperCase();
+  const token = options.token || getSavedAuthSession()?.token?.access_token;
+  const rawBody = options.body
+    ? typeof options.body === 'string'
+      ? options.body
+      : JSON.stringify(options.body)
+    : undefined;
+
+  // 1. In Tauri Desktop: Call native Tauri HTTP command
+  if (isTauri()) {
+    try {
+      const { invoke } = await import('@tauri-apps/api/core');
+      const response = await invoke<{ status: number; ok: boolean; body: string; error?: string }>(
+        'http_arm_request',
+        {
+          method,
+          url,
+          bearerToken: token || null,
+          headers: options.headers || null,
+          body: rawBody || null,
+        }
+      );
+
+      return {
+        ok: response.ok,
+        status: response.status,
+        statusText: response.ok ? 'OK' : 'Error',
+        json: async () => {
+          if (!response.body || response.body.trim().length === 0) return {};
+          return JSON.parse(response.body);
+        },
+        text: async () => response.body || '',
+      };
+    } catch (tauriErr) {
+      console.warn('Tauri native ARM request notice:', tauriErr);
+    }
+  }
+
+  // 2. Web browser: Use dev proxy
+  const proxyUrl = url.replace('https://management.azure.com', '/api/azure-arm');
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(options.headers || {}),
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const fetchOptions: RequestInit = {
+    method,
+    headers,
+    body: rawBody,
+  };
+
+  try {
+    const res = await fetch(proxyUrl, fetchOptions);
+    return {
+      ok: res.ok,
+      status: res.status,
+      statusText: res.statusText,
+      json: () => res.json(),
+      text: () => res.text(),
+    };
+  } catch {
+    // 3. Final direct fetch attempt
+    const res = await fetch(url, fetchOptions);
+    return {
+      ok: res.ok,
+      status: res.status,
+      statusText: res.statusText,
+      json: () => res.json(),
+      text: () => res.text(),
+    };
+  }
+}
+
 /**
  * Universal JSON GET with Tauri Native fallback and Dev Proxy fallback
  */
 async function getJson(url: string, bearerToken?: string): Promise<any> {
-  if (isTauri()) {
-    try {
-      const { invoke } = await import('@tauri-apps/api/core');
-      const responseText = await invoke<string>('http_get_json', { url, bearerToken });
-      return JSON.parse(responseText);
-    } catch (err) {
-      console.warn('Tauri native HTTP get fallback:', err);
-    }
+  const res = await armRequest(url, { method: 'GET', token: bearerToken });
+  if (res.ok) {
+    return await res.json();
   }
-
-  const proxyUrl = url.replace('https://management.azure.com', '/api/azure-arm');
-  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-  if (bearerToken) {
-    headers['Authorization'] = `Bearer ${bearerToken}`;
-  }
-
+  const errText = await res.text();
+  let parsedErr: any = null;
   try {
-    const res = await fetch(proxyUrl, { headers });
-    return await res.json();
+    parsedErr = JSON.parse(errText);
   } catch {
-    const res = await fetch(url, { headers });
-    return await res.json();
+    // ignore
   }
+  const msg = parsedErr?.error?.message || parsedErr?.message || errText;
+  throw new Error(`ARM request failed (${res.status}): ${msg}`);
 }
+
 
 /**
  * 1. Request Microsoft Device Authorization Code
@@ -451,22 +540,30 @@ export function buildArmTemplate(resources: any[], region: string, tenantId: str
   };
 }
 
-function getApiVersionForType(type: string): string {
-  switch (type) {
-    case 'Microsoft.Network/virtualNetworks':
-      return '2023-09-01';
-    case 'Microsoft.Storage/storageAccounts':
-      return '2023-01-01';
-    case 'Microsoft.Web/serverfarms':
-    case 'Microsoft.Web/sites':
-      return '2022-09-01';
-    case 'Microsoft.KeyVault/vaults':
-      return '2023-07-01';
-    case 'Microsoft.DBforPostgreSQL/flexibleServers':
-      return '2023-03-01-preview';
-    default:
-      return '2021-04-01';
-  }
+export function extractResourceTypeFromId(resourceId: string): string {
+  const match = resourceId.match(/\/providers\/([^\/]+\/[^\/]+)/i);
+  return match ? match[1] : '';
+}
+
+export function getApiVersionForType(type: string): string {
+  const t = type.toLowerCase();
+  if (t.includes('microsoft.network/virtualnetworks') || t.includes('virtualnetworks')) return '2023-09-01';
+  if (t.includes('microsoft.network/networksecuritygroups') || t.includes('networksecuritygroups')) return '2023-09-01';
+  if (t.includes('microsoft.network/publicipaddresses') || t.includes('publicipaddresses')) return '2023-09-01';
+  if (t.includes('microsoft.network/networkinterfaces') || t.includes('networkinterfaces')) return '2023-09-01';
+  if (t.includes('microsoft.storage/storageaccounts') || t.includes('storageaccounts')) return '2023-01-01';
+  if (t.includes('serverfarms') || t.includes('microsoft.web/serverfarms')) return '2022-09-01';
+  if (t.includes('sites') || t.includes('microsoft.web/sites')) return '2022-09-01';
+  if (t.includes('microsoft.keyvault/vaults') || t.includes('keyvault') || t.includes('vaults')) return '2023-07-01';
+  if (t.includes('microsoft.dbforpostgresql/flexibleservers') || t.includes('flexibleservers') || t.includes('postgresql')) return '2023-03-01-preview';
+  if (t.includes('microsoft.sql/servers') || t.includes('sql')) return '2021-11-01';
+  if (t.includes('microsoft.compute/virtualmachines') || t.includes('virtualmachines')) return '2023-09-01';
+  if (t.includes('microsoft.compute/disks') || t.includes('disks')) return '2023-04-02';
+  if (t.includes('microsoft.containerservice/managedclusters') || t.includes('managedclusters')) return '2023-10-01';
+  if (t.includes('microsoft.containerregistry/registries') || t.includes('containerregistry')) return '2023-07-01';
+  if (t.includes('microsoft.operationalinsights/workspaces')) return '2022-10-01';
+  if (t.includes('microsoft.insights/components') || t.includes('insights')) return '2020-02-02';
+  return '2021-04-01';
 }
 
 /**
@@ -488,19 +585,13 @@ export async function deployWithArmRestApi(
 
   // 1. Ensure Azure Resource Group exists first
   const rgUrl = `https://management.azure.com/subscriptions/${subscriptionId}/resourcegroups/${resourceGroup}?api-version=2021-04-01`;
-  const rgProxyUrl = rgUrl.replace('https://management.azure.com', '/api/azure-arm');
   try {
-    const rgRes = await fetch(rgProxyUrl, {
+    const rgRes = await armRequest(rgUrl, {
       method: 'PUT',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        location: region,
-      }),
+      token,
+      body: { location: region },
     });
-    if (!rgRes.ok) {
+    if (!rgRes.ok && rgRes.status !== 200 && rgRes.status !== 201) {
       const rgErr = await rgRes.text();
       console.warn('Resource group pre-provision notice:', rgErr);
     }
@@ -513,25 +604,28 @@ export async function deployWithArmRestApi(
 
   // 3. Trigger ARM Deployment PUT
   const deployUrl = `https://management.azure.com/subscriptions/${subscriptionId}/resourcegroups/${resourceGroup}/providers/Microsoft.Resources/deployments/${deploymentName}?api-version=2021-04-01`;
-  const proxyUrl = deployUrl.replace('https://management.azure.com', '/api/azure-arm');
 
-  const res = await fetch(proxyUrl, {
+  const res = await armRequest(deployUrl, {
     method: 'PUT',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
+    token,
+    body: {
       properties: {
         mode: 'Incremental',
         template: armTemplate,
       },
-    }),
+    },
   });
 
-  if (!res.ok) {
+  if (!res.ok && res.status !== 200 && res.status !== 201) {
     const errText = await res.text();
-    throw new Error(`Azure ARM Deployment failed: ${errText}`);
+    let errObj: any = null;
+    try {
+      errObj = JSON.parse(errText);
+    } catch {
+      // not json
+    }
+    const msg = errObj?.error?.message || errObj?.message || errText;
+    throw new Error(`Azure ARM Deployment failed (${res.status}): ${msg}`);
   }
 
   // 4. Poll Azure ARM Deployment until completion (real cloud provisioning tracking)
@@ -543,11 +637,9 @@ export async function deployWithArmRestApi(
     await new Promise((r) => setTimeout(r, pollIntervalMs));
 
     try {
-      const statusRes = await fetch(proxyUrl, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
+      const statusRes = await armRequest(deployUrl, {
+        method: 'GET',
+        token,
       });
 
       if (statusRes.ok) {
@@ -561,11 +653,8 @@ export async function deployWithArmRestApi(
         if (provState === 'Failed' || provState === 'Canceled') {
           // Fetch detailed operation failure details
           const opsUrl = `https://management.azure.com/subscriptions/${subscriptionId}/resourcegroups/${resourceGroup}/providers/Microsoft.Resources/deployments/${deploymentName}/operations?api-version=2021-04-01`;
-          const opsProxyUrl = opsUrl.replace('https://management.azure.com', '/api/azure-arm');
           try {
-            const opsRes = await fetch(opsProxyUrl, {
-              headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-            });
+            const opsRes = await armRequest(opsUrl, { method: 'GET', token });
             if (opsRes.ok) {
               const opsData = await opsRes.json();
               const failedOp = (opsData.value || []).find(
@@ -603,6 +692,17 @@ export async function deleteResourceGroupViaArm(
   subscriptionId: string,
   resourceGroup: string
 ): Promise<any> {
+  // If running inside Tauri, try native az group delete first
+  if (isTauri()) {
+    try {
+      const { invoke } = await import('@tauri-apps/api/core');
+      const out = await invoke<string>('delete_resource_group', { resourceGroup });
+      return { status: 'Deleted', resourceGroup, output: out };
+    } catch (cliErr) {
+      console.warn('Native az group delete fallback to ARM REST API:', cliErr);
+    }
+  }
+
   const session = getSavedAuthSession();
   if (!session?.token?.access_token) {
     throw new Error('Not authenticated with Azure. Please sign in first.');
@@ -610,19 +710,22 @@ export async function deleteResourceGroupViaArm(
 
   const token = session.token.access_token;
   const deleteUrl = `https://management.azure.com/subscriptions/${subscriptionId}/resourcegroups/${resourceGroup}?api-version=2021-04-01`;
-  const proxyUrl = deleteUrl.replace('https://management.azure.com', '/api/azure-arm');
 
-  const res = await fetch(proxyUrl, {
+  const res = await armRequest(deleteUrl, {
     method: 'DELETE',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
+    token,
   });
 
   if (!res.ok && res.status !== 202 && res.status !== 204 && res.status !== 200) {
     const errText = await res.text();
-    throw new Error(`Failed to delete Azure Resource Group: ${errText}`);
+    let errObj: any = null;
+    try {
+      errObj = JSON.parse(errText);
+    } catch {
+      // ignore
+    }
+    const msg = errObj?.error?.message || errObj?.message || errText;
+    throw new Error(`Failed to delete Azure Resource Group: ${msg}`);
   }
 
   return { status: 'Deleted', resourceGroup };
@@ -647,48 +750,45 @@ export async function whatIfWithArmRestApi(
 
   // Ensure Azure Resource Group exists before running What-If
   const rgUrl = `https://management.azure.com/subscriptions/${subscriptionId}/resourcegroups/${resourceGroup}?api-version=2021-04-01`;
-  const rgProxyUrl = rgUrl.replace('https://management.azure.com', '/api/azure-arm');
   try {
-    await fetch(rgProxyUrl, {
+    await armRequest(rgUrl, {
       method: 'PUT',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        location: region,
-      }),
+      token,
+      body: { location: region },
     });
   } catch (e) {
     console.warn('What-If resource group notice:', e);
   }
 
   const armTemplate = buildArmTemplate(resources, region, session.account?.tenantId);
-
   const whatIfUrl = `https://management.azure.com/subscriptions/${subscriptionId}/resourcegroups/${resourceGroup}/providers/Microsoft.Resources/deployments/${deploymentName}/whatIf?api-version=2021-04-01`;
-  const proxyUrl = whatIfUrl.replace('https://management.azure.com', '/api/azure-arm');
 
-  const res = await fetch(proxyUrl, {
+  const res = await armRequest(whatIfUrl, {
     method: 'POST',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
+    token,
+    body: {
       properties: {
         mode: 'Incremental',
         template: armTemplate,
       },
-    }),
+    },
   });
 
   if (!res.ok) {
     const errText = await res.text();
-    throw new Error(`Azure What-If execution failed: ${errText}`);
+    let errObj: any = null;
+    try {
+      errObj = JSON.parse(errText);
+    } catch {
+      // ignore
+    }
+    const msg = errObj?.error?.message || errObj?.message || errText;
+    throw new Error(`Azure What-If execution failed: ${msg}`);
   }
 
   return await res.json();
 }
+
 
 /**
  * Save auth session to persistent storage
@@ -808,33 +908,116 @@ export async function fetchSubscriptionBillingInfo(
 }
 
 /**
- * 7. Delete individual Azure Resource via ARM REST API
+ * 7. Delete individual Azure Resource via ARM REST API with Conflict / Cascade Resolution
  */
 export async function deleteResourceByIdViaArm(
   resourceId: string,
-  accessToken?: string
+  resourceType?: string,
+  accessToken?: string,
+  options?: { cascade?: boolean }
 ): Promise<any> {
+  // If running inside desktop Tauri, try native az CLI first if available
+  if (isTauri()) {
+    try {
+      const { invoke } = await import('@tauri-apps/api/core');
+      const out = await invoke<string>('delete_resource_native', { resourceId });
+      return { status: 'Deleted', resourceId, output: out };
+    } catch (cliErr) {
+      console.warn('Native az resource delete fallback to ARM REST API:', cliErr);
+    }
+  }
+
   const token = accessToken || getSavedAuthSession()?.token?.access_token;
   if (!token) {
     throw new Error('Not authenticated with Azure. Please sign in first.');
   }
 
-  const deleteUrl = `https://management.azure.com${resourceId}?api-version=2021-04-01`;
-  const proxyUrl = deleteUrl.replace('https://management.azure.com', '/api/azure-arm');
+  const detectedType = resourceType || extractResourceTypeFromId(resourceId);
+  const apiVersion = getApiVersionForType(detectedType);
 
-  const res = await fetch(proxyUrl, {
-    method: 'DELETE',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-  });
+  const performDelete = async (targetId: string, targetType: string, version?: string) => {
+    const v = version || getApiVersionForType(targetType);
+    const deleteUrl = `https://management.azure.com${targetId}?api-version=${v}`;
+    return await armRequest(deleteUrl, {
+      method: 'DELETE',
+      token,
+    });
+  };
 
+  let res = await performDelete(resourceId, detectedType, apiVersion);
+
+  // If Azure reports NoRegisteredProviderFound or unsupported api-version error, parse supported versions list and retry
   if (!res.ok && res.status !== 202 && res.status !== 204 && res.status !== 200) {
     const errText = await res.text();
-    throw new Error(`Failed to delete resource: ${errText}`);
+    let errObj: any = null;
+    try {
+      errObj = JSON.parse(errText);
+    } catch {
+      // not json
+    }
+
+    const errMsg = errObj?.error?.message || errObj?.Message || errObj?.message || '';
+    const errCode = errObj?.error?.code || errObj?.Code || errObj?.code || '';
+
+    // 1. Check for API version mismatch
+    const versionMatch = errMsg.match(/supported api-versions are '([^']+)'/i);
+    if (versionMatch && versionMatch[1]) {
+      const supportedList = versionMatch[1].split(',').map((s: string) => s.trim()).filter(Boolean);
+      const candidate = supportedList.find((v: string) => !v.includes('preview') && !v.includes('alpha')) || supportedList[0];
+      if (candidate && candidate !== apiVersion) {
+        console.info(`Retrying Azure delete with supported api-version '${candidate}' for ${detectedType || resourceId}`);
+        res = await performDelete(resourceId, detectedType, candidate);
+        if (res.ok || res.status === 202 || res.status === 204 || res.status === 200) {
+          return { status: 'Deleted', resourceId, apiVersion: candidate };
+        }
+      }
+    }
+
+    // 2. Check for App Service Plan / Web App Conflict (Conflict error 409)
+    if (errCode === 'Conflict' || errMsg.includes('cannot be deleted because it has web app(s)')) {
+      const subRgMatch = resourceId.match(/^(\/subscriptions\/[^\/]+\/resourceGroups\/[^\/]+)/i);
+      const baseRgPath = subRgMatch ? subRgMatch[1] : '';
+
+      // Extract conflicting web app names from parameters or error message
+      let assignedApps: string[] = [];
+      const errorEntityParams = errObj?.Details?.[0]?.ErrorEntity?.Parameters || errObj?.error?.details?.[0]?.parameters;
+      if (Array.isArray(errorEntityParams) && errorEntityParams.length > 1) {
+        assignedApps = errorEntityParams.slice(1).map((s: any) => String(s).trim());
+      } else {
+        const appMatch = errMsg.match(/has web app\(s\)\s+([^\s]+)\s+assigned/i);
+        if (appMatch && appMatch[1]) {
+          assignedApps = appMatch[1].split(',').map((s: string) => s.trim());
+        }
+      }
+
+      if (assignedApps.length > 0 && (options?.cascade !== false)) {
+        console.info(`Cascade deleting assigned web apps first: ${assignedApps.join(', ')}`);
+        for (const appName of assignedApps) {
+          const siteId = `${baseRgPath}/providers/Microsoft.Web/sites/${appName}`;
+          try {
+            await performDelete(siteId, 'Microsoft.Web/sites');
+          } catch (siteErr) {
+            console.warn(`Failed to cascade delete web app '${appName}':`, siteErr);
+          }
+        }
+        // Wait 1.5s for Azure to release the plan binding
+        await new Promise((r) => setTimeout(r, 1500));
+        res = await performDelete(resourceId, detectedType, apiVersion);
+        if (res.ok || res.status === 202 || res.status === 204 || res.status === 200) {
+          return { status: 'Deleted', resourceId, cascadeDeleted: assignedApps };
+        }
+      } else if (assignedApps.length > 0) {
+        throw new Error(`Cannot delete App Service Plan '${resourceId.split('/').pop()}': Web App '${assignedApps.join(', ')}' is currently hosted on it. Please delete the Web App first.`);
+      }
+    }
+
+    if (!res.ok && res.status !== 202 && res.status !== 204 && res.status !== 200) {
+      const displayMsg = errMsg || errText;
+      throw new Error(`Failed to delete resource: ${displayMsg}`);
+    }
   }
 
-  return { status: 'Deleted', resourceId };
+  return { status: 'Deleted', resourceId, apiVersion };
 }
+
 

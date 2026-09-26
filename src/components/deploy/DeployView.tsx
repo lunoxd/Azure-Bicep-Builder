@@ -44,6 +44,8 @@ const DEFAULT_REGIONS = [
   { id: 'southafricanorth', name: 'South Africa North', studentRecommended: false },
 ];
 
+import { AppleSpinner } from '../common/AppleSpinner';
+
 export const DeployView: React.FC = () => {
   const { currentEnvironment, updateEnvironmentField } = useEnvironmentStore();
   const { loginStatus, selectedSubscription } = useAzureStore();
@@ -80,7 +82,7 @@ export const DeployView: React.FC = () => {
   if (!currentEnvironment) {
     return (
       <div className="empty-state">
-        <Layers size={36} color="#71717a" />
+        <Layers size={36} />
         <h3>No Environment Selected</h3>
         <p>Please select or create an environment to deploy.</p>
       </div>
@@ -160,7 +162,6 @@ export const DeployView: React.FC = () => {
       const errStr = err?.message || err?.toString() || 'Deployment failed.';
       setErrorMessage(errStr);
       
-      // Detect Azure Student/Free Tier Regional Policy restriction
       if (errStr.includes('RequestDisallowedByAzure') || errStr.includes('best available regions')) {
         setIsPolicyError(true);
       }
@@ -212,13 +213,13 @@ export const DeployView: React.FC = () => {
   const getStepIndicator = (status: DeploymentStatus) => {
     switch (status) {
       case 'succeeded':
-        return <CheckCircle2 size={16} color="#10b981" />;
+        return <CheckCircle2 size={16} />;
       case 'running':
-        return <span className="spinner" style={{ width: '14px', height: '14px', borderTopColor: '#10b981' }} />;
+        return <AppleSpinner size={16} />;
       case 'failed':
-        return <XCircle size={16} color="#ef4444" />;
+        return <XCircle size={16} />;
       default:
-        return <Clock size={14} color="#71717a" />;
+        return <Clock size={14} />;
     }
   };
 
@@ -245,11 +246,11 @@ export const DeployView: React.FC = () => {
           </div>
         </div>
 
-        {/* Interactive Region Selector with East Asia & Global Azure Regions */}
+        {/* Interactive Region Selector */}
         <div className="card" style={{ padding: '14px 16px', background: '#18181b', border: '1px solid #27272a' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontWeight: 600 }}>Deployment Region</div>
-            <span style={{ fontSize: '10px', color: '#10b981', fontWeight: 700 }}>Selectable</span>
+            <span style={{ fontSize: '10px', color: '#a1a1aa', fontWeight: 700 }}>Selectable</span>
           </div>
           <div style={{ position: 'relative', marginTop: '4px' }}>
             <select
@@ -259,7 +260,7 @@ export const DeployView: React.FC = () => {
                 padding: '4px 26px 4px 8px',
                 fontSize: '13px',
                 fontWeight: 700,
-                color: '#10b981',
+                color: '#fafafa',
                 background: '#09090b',
                 borderColor: '#3f3f46',
                 cursor: 'pointer',
@@ -270,7 +271,7 @@ export const DeployView: React.FC = () => {
             >
               {regions.map((r) => (
                 <option key={r.id} value={r.id}>
-                  {r.name} ({r.id}) {r.studentRecommended ? '⭐ (Student)' : ''}
+                  {r.name} ({r.id}) {r.studentRecommended ? '(Recommended)' : ''}
                 </option>
               ))}
             </select>
@@ -298,9 +299,9 @@ export const DeployView: React.FC = () => {
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-            <Sparkles size={20} color="#3b82f6" />
+            <Sparkles size={20} />
             <h3 style={{ fontSize: '15px', fontWeight: 800, color: '#fafafa', margin: 0 }}>
-              Azure for Students Regional Policy Detected
+              Azure Regional Policy Notice
             </h3>
           </div>
           <p style={{ fontSize: '12px', color: '#fafafa', margin: '0 0 14px 0', lineHeight: 1.5 }}>
@@ -308,13 +309,13 @@ export const DeployView: React.FC = () => {
           </p>
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
             {[
-              { id: 'eastasia', label: '⭐ East Asia (eastasia)' },
-              { id: 'southeastasia', label: '⭐ Southeast Asia (southeastasia)' },
-              { id: 'centralindia', label: '⭐ Central India (centralindia)' },
-              { id: 'japaneast', label: '⭐ Japan East (japaneast)' },
-              { id: 'eastus', label: '⭐ East US (eastus)' },
-              { id: 'eastus2', label: '⭐ East US 2 (eastus2)' },
-              { id: 'westeurope', label: '⭐ West Europe (westeurope)' },
+              { id: 'eastasia', label: 'East Asia (eastasia)' },
+              { id: 'southeastasia', label: 'Southeast Asia (southeastasia)' },
+              { id: 'centralindia', label: 'Central India (centralindia)' },
+              { id: 'japaneast', label: 'Japan East (japaneast)' },
+              { id: 'eastus', label: 'East US (eastus)' },
+              { id: 'eastus2', label: 'East US 2 (eastus2)' },
+              { id: 'westeurope', label: 'West Europe (westeurope)' },
             ].map((reg) => (
               <button
                 key={reg.id}
@@ -328,7 +329,7 @@ export const DeployView: React.FC = () => {
                 }}
                 onClick={() => handleQuickRegionSwitch(reg.id)}
               >
-                ⚡ {reg.label}
+                {reg.label}
               </button>
             ))}
           </div>
@@ -360,7 +361,7 @@ export const DeployView: React.FC = () => {
               margin: '0 auto 12px auto',
             }}
           >
-            <ShieldAlert size={22} color="#ef4444" />
+            <ShieldAlert size={22} />
           </div>
           <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#fafafa', margin: '0 0 6px 0' }}>
             Connect Azure to Deploy
@@ -411,7 +412,7 @@ export const DeployView: React.FC = () => {
                 </span>
               </div>
               <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: '4px 0 0 0' }}>
-                Targeting Region: <strong style={{ color: '#3b82f6' }}>{currentEnvironment.region}</strong> • {currentEnvironment.resources.length} resources
+                Targeting Region: <strong style={{ color: '#fafafa' }}>{currentEnvironment.region}</strong> • {currentEnvironment.resources.length} resources
               </p>
             </div>
 
@@ -424,7 +425,7 @@ export const DeployView: React.FC = () => {
                 style={{ padding: '12px 24px', fontSize: '14px', fontWeight: 700 }}
               >
                 {isDeploying ? (
-                  <span className="spinner" style={{ width: '14px', height: '14px' }} />
+                  <AppleSpinner size={15} />
                 ) : (
                   <Rocket size={16} />
                 )}
@@ -462,7 +463,7 @@ export const DeployView: React.FC = () => {
                   title="Delete Resource Group and destroy all deployed Azure resources"
                 >
                   {isDeleting ? (
-                    <span className="spinner" style={{ width: '14px', height: '14px', borderTopColor: '#ef4444' }} />
+                    <AppleSpinner size={15} />
                   ) : (
                     <Trash2 size={16} />
                   )}
@@ -524,7 +525,7 @@ export const DeployView: React.FC = () => {
       {steps.length > 0 && (
         <div className="card" style={{ padding: '20px', background: '#18181b', border: '1px solid #27272a', borderRadius: '12px' }}>
           <div style={{ fontSize: '14px', fontWeight: 700, color: '#fafafa', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Globe size={16} color="#10b981" />
+            <Globe size={16} />
             Deployment Execution Progress ({currentEnvironment.region})
           </div>
           <div className="deploy-timeline">

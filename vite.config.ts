@@ -21,4 +21,16 @@ export default defineConfig({
       },
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('@monaco-editor')) return 'monaco-vendor';
+          if (id.includes('@xyflow')) return 'flow-vendor';
+          if (id.includes('lucide-react')) return 'lucide-vendor';
+        },
+      },
+    },
+    chunkSizeWarningLimit: 1200,
+  },
 })

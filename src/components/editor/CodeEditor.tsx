@@ -21,25 +21,28 @@ export const CodeEditor: React.FC<{
     if (!currentEnvironment) return;
 
     let isMounted = true;
-    generateBicepCode(
-      currentEnvironment.resources,
-      currentEnvironment.resourceGroup,
-      currentEnvironment.region
-    )
-      .then((res) => {
-        if (isMounted) {
-          setBicepCode(res.code);
-          setSourceMap(res.sourceMap);
-        }
-      })
-      .catch((err) => {
-        if (isMounted) {
-          setBicepCode(`// Error generating Bicep: ${err}`);
-        }
-      });
+    const timer = setTimeout(() => {
+      generateBicepCode(
+        currentEnvironment.resources,
+        currentEnvironment.resourceGroup,
+        currentEnvironment.region
+      )
+        .then((res) => {
+          if (isMounted) {
+            setBicepCode(res.code);
+            setSourceMap(res.sourceMap);
+          }
+        })
+        .catch((err) => {
+          if (isMounted) {
+            setBicepCode(`// Error generating Bicep: ${err}`);
+          }
+        });
+    }, 120);
 
     return () => {
       isMounted = false;
+      clearTimeout(timer);
     };
   }, [currentEnvironment]);
 

@@ -5,8 +5,10 @@ import { checkRegionCompatibility } from '../../hooks/useTauri';
 import type { RegionCompatibility, Environment } from '../../types';
 import { v4 as uuidv4 } from 'uuid';
 import { X, Globe, CheckCircle2, AlertTriangle, AlertCircle, Info, Lightbulb } from 'lucide-react';
+import { AppleSpinner } from '../common/AppleSpinner';
 
 export const RegionReplicationModal: React.FC = () => {
+
   const { currentEnvironment, environments, setEnvironments, setCurrentEnvironment } = useEnvironmentStore();
   const { regionReplicationOpen, setRegionReplicationOpen } = useUIStore();
 
@@ -105,10 +107,11 @@ export const RegionReplicationModal: React.FC = () => {
 
           {isChecking ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-secondary)', fontSize: 'var(--text-xs)' }}>
-              <span className="spinner" style={{ width: '12px', height: '12px' }} />
+              <AppleSpinner size={14} />
               Verifying SKU matrices across Azure regions...
             </div>
           ) : compatResult && compatResult.warnings.length > 0 ? (
+
             compatResult.warnings.map((w, idx) => (
               <div key={idx} className={`region-warning severity-${w.severity}`}>
                 <div style={{ marginTop: '2px' }}>

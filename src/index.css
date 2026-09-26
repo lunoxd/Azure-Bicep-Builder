@@ -1,5 +1,5 @@
 /* ============================================================
-   Bicep Visual Studio — Clean Shadcn UI Design System
+   Azure Bicep Builder (ABB) — Clean Shadcn UI Design System
    High-Contrast Dark Theme (Black/White/Zinc) with Emerald Green Action Buttons
    Generous Spacing, Large Clean Panels, and Polished UX
    ============================================================ */
@@ -953,19 +953,51 @@ select.input {
   border: 1px solid rgba(56, 189, 248, 0.25);
 }
 
-/* ---- Spinner ---- */
+/* ---- Apple-style Spinner & Universal Loading Animations ---- */
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes apple-spin-steps {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.apple-spinner-wrapper,
+.apple-spinner {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  animation: apple-spin-steps 0.8s steps(8, end) infinite;
+  transform-origin: 50% 50%;
+  will-change: transform;
+}
+
+.animate-spin,
+.spin-animation,
+.spinning,
+svg.spinning {
+  display: inline-block;
+  animation: spin 0.8s linear infinite !important;
+  transform-origin: 50% 50%;
+  will-change: transform;
 }
 
 .spinner {
-  width: 18px;
-  height: 18px;
-  border: 2px solid rgba(255, 255, 255, 0.2);
-  border-top-color: #ffffff;
+  width: 16px;
+  height: 16px;
+  display: inline-block;
+  vertical-align: middle;
   border-radius: 50%;
-  animation: spin 0.7s linear infinite;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-top-color: #38bdf8;
+  animation: spin 0.75s linear infinite;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  will-change: transform;
 }
+
 
 /* ---- Empty State ---- */
 .empty-state {

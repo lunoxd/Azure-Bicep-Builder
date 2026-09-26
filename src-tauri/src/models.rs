@@ -170,3 +170,16 @@ pub struct LineRange {
     pub start: usize,
     pub end: usize,
 }
+
+// ============================================================
+// Native HTTP Response
+// ============================================================
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct HttpResponse {
+    pub status: u16,
+    pub ok: bool,
+    pub body: String,
+    pub error: Option<String>,
+}
+

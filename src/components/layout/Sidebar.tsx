@@ -1,7 +1,7 @@
 import React from 'react';
 import { useUIStore, useAzureStore, useEnvironmentStore } from '../../stores';
 import type { NavSection } from '../../types';
-import { LayoutDashboard, Network, FileCode, Layers, Rocket, Zap, Cloud, Wallet } from 'lucide-react';
+import { LayoutDashboard, Network, FileCode, Rocket, Cloud, Wallet } from 'lucide-react';
 
 interface NavItem {
   id: NavSection;
@@ -12,9 +12,9 @@ interface NavItem {
 const navItems: NavItem[] = [
   { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={18} /> },
   { id: 'environments', label: 'Environments', icon: <Network size={18} /> },
-  { id: 'account', label: 'Credits & Resources', icon: <Wallet size={18} /> },
-  { id: 'templates', label: 'Templates', icon: <FileCode size={18} /> },
-  { id: 'modules', label: 'Module Versions', icon: <Layers size={18} /> },
+  { id: 'templates', label: 'Blueprints', icon: <FileCode size={18} /> },
+  { id: 'resources', label: 'Cloud Resources', icon: <Cloud size={18} /> },
+  { id: 'credits', label: 'Credits & Billing', icon: <Wallet size={18} /> },
   { id: 'deployments', label: 'Deployments', icon: <Rocket size={18} /> },
 ];
 
@@ -26,13 +26,15 @@ export const Sidebar: React.FC = () => {
   return (
     <aside className={`app-sidebar ${sidebarCollapsed ? 'collapsed' : ''}`}>
       <div className="sidebar-logo">
-        <div className="sidebar-logo-icon">
-          <Zap size={16} fill="#09090b" />
-        </div>
+        <img
+          src="/logo.png"
+          alt="Azure Bicep Builder"
+          style={{ width: '28px', height: '28px', borderRadius: '6px', objectFit: 'contain' }}
+        />
         {!sidebarCollapsed && (
           <div className="sidebar-logo-text">
-            <h1>Bicep Studio</h1>
-            <span>Azure Architect</span>
+            <h1 style={{ fontSize: '13px', lineHeight: '1.2' }}>Azure Bicep Builder</h1>
+            <span style={{ fontSize: '10px', color: '#a1a1aa' }}>ABB</span>
           </div>
         )}
       </div>
@@ -65,7 +67,7 @@ export const Sidebar: React.FC = () => {
               }}
             >
               <span className="sidebar-item-icon">
-                <Cloud size={16} color="#3b82f6" />
+                <Cloud size={16} />
               </span>
               <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {currentEnvironment.name}

@@ -356,7 +356,8 @@ function fallbackGenerateBicep(
   lines.push("@description('Standard resource tags applied across infrastructure.')");
   lines.push("param tags object = {");
   lines.push("  Environment: environmentName");
-  lines.push("  ManagedBy: 'BicepVisualStudio'");
+  lines.push("  ResourceGroup: '" + resourceGroup + "'");
+  lines.push("  ManagedBy: 'AzureBicepBuilder'");
   lines.push("}");
   lines.push('');
 

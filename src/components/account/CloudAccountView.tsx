@@ -28,8 +28,10 @@ import {
   Globe,
   Lock,
 } from 'lucide-react';
+import { AppleSpinner } from '../common/AppleSpinner';
 
 export const CloudAccountView: React.FC = () => {
+
   const { loginStatus, selectedSubscription, setSelectedSubscription } = useAzureStore();
   const [resources, setResources] = useState<LiveAzureResource[]>([]);
   const [resourceGroups, setResourceGroups] = useState<any[]>([]);
@@ -74,7 +76,7 @@ export const CloudAccountView: React.FC = () => {
     setDeletingId(res.id);
     setActionMessage(null);
     try {
-      await deleteResourceByIdViaArm(res.id);
+      await deleteResourceByIdViaArm(res.id, res.type);
       setActionMessage({ type: 'success', text: `Resource '${res.name}' deletion initiated in Azure.` });
       setResources((prev) => prev.filter((r) => r.id !== res.id));
     } catch (err: any) {
@@ -86,7 +88,7 @@ export const CloudAccountView: React.FC = () => {
 
   const handleDeleteResourceGroup = async (rgName: string) => {
     if (!selectedSubscription?.id) return;
-    if (!window.confirm(`⚠️ WARNING: Deleting Resource Group '${rgName}' will destroy all resources inside it! Are you sure?`)) {
+    if (!window.confirm(`Warning: Deleting Resource Group '${rgName}' will destroy all resources inside it! Are you sure?`)) {
       return;
     }
     setDeletingId(rgName);
@@ -115,19 +117,19 @@ export const CloudAccountView: React.FC = () => {
   });
 
   const getResourceIcon = (type: string) => {
-    if (type.includes('storageAccounts')) return <HardDrive size={16} color="#3b82f6" />;
-    if (type.includes('sites') || type.includes('serverfarms')) return <Server size={16} color="#3b82f6" />;
-    if (type.includes('PostgreSQL') || type.includes('sql')) return <Database size={16} color="#3b82f6" />;
-    if (type.includes('vaults')) return <Lock size={16} color="#f59e0b" />;
-    if (type.includes('virtualNetworks')) return <Globe size={16} color="#38bdf8" />;
-    return <Cloud size={16} color="#3b82f6" />;
+    if (type.includes('storageAccounts')) return <HardDrive size={16} />;
+    if (type.includes('sites') || type.includes('serverfarms')) return <Server size={16} />;
+    if (type.includes('PostgreSQL') || type.includes('sql')) return <Database size={16} />;
+    if (type.includes('vaults')) return <Lock size={16} />;
+    if (type.includes('virtualNetworks')) return <Globe size={16} />;
+    return <Cloud size={16} />;
   };
 
   if (!loginStatus.loggedIn) {
     return (
       <div className="account-view empty-container" style={{ padding: '40px', maxWidth: '800px', margin: '0 auto', textAlign: 'center' }}>
         <div style={{ background: '#18181b', borderRadius: '16px', border: '1px solid #27272a', padding: '48px 32px' }}>
-          <ShieldCheck size={48} color="#3b82f6" style={{ margin: '0 auto 16px' }} />
+          <ShieldCheck size={48} style={{ margin: '0 auto 16px' }} />
           <h2 style={{ fontSize: '22px', fontWeight: 700, color: '#fafafa', marginBottom: '8px' }}>Azure Account Not Connected</h2>
           <p style={{ color: '#a1a1aa', fontSize: '14px', marginBottom: '24px', maxWidth: '500px', margin: '0 auto 24px' }}>
             Sign in with your Azure or Azure for Students account using the Azure button in the top navigation bar to view your live credits balance, provisioned resources, and manage cloud inventory.
@@ -184,9 +186,10 @@ export const CloudAccountView: React.FC = () => {
             disabled={loading}
             style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
           >
-            <RefreshCw size={15} className={loading ? 'spinner' : ''} />
+            <RefreshCw size={15} className={loading ? 'spinning' : ''} />
             {loading ? 'Refreshing...' : 'Refresh Live State'}
           </button>
+
 
           <a
             href="https://portal.azure.com/#view/Microsoft_Azure_CostManagement/Menu/~/overview"
@@ -463,7 +466,11 @@ export const CloudAccountView: React.FC = () => {
                             title="Delete Resource from Azure"
                             style={{ padding: '4px 8px', color: '#ef4444' }}
                           >
-                            <Trash2 size={13} className={deletingId === res.id ? 'spinner' : ''} />
+                            {deletingId === res.id ? (
+                              <AppleSpinner size={13} color="#ef4444" />
+                            ) : (
+                              <Trash2 size={13} />
+                            )}
                           </button>
                         </div>
                       </td>
@@ -529,7 +536,11 @@ export const CloudAccountView: React.FC = () => {
                       disabled={deletingId === rg.name}
                       style={{ fontSize: '12px', color: '#ef4444', display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 8px' }}
                     >
-                      <Trash2 size={13} className={deletingId === rg.name ? 'spinner' : ''} />
+                      {deletingId === rg.name ? (
+                        <AppleSpinner size={13} color="#ef4444" />
+                      ) : (
+                        <Trash2 size={13} />
+                      )}
                       {deletingId === rg.name ? 'Deleting...' : '1-Click Teardown'}
                     </button>
                   </div>
@@ -539,6 +550,7 @@ export const CloudAccountView: React.FC = () => {
           )}
         </div>
       )}
+
     </div>
   );
 };

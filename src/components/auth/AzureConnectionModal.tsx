@@ -26,6 +26,7 @@ import {
   LogOut,
   Zap,
 } from 'lucide-react';
+import { AppleSpinner } from '../common/AppleSpinner';
 
 export const AzureConnectionModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
   isOpen,
@@ -51,7 +52,6 @@ export const AzureConnectionModal: React.FC<{ isOpen: boolean; onClose: () => vo
   const [isVerifying, setIsVerifying] = useState(false);
   const [installSuccessMsg, setInstallSuccessMsg] = useState<string | null>(null);
 
-  // Restore saved session or check CLI on modal open
   useEffect(() => {
     if (isOpen) {
       setError(null);
@@ -93,7 +93,6 @@ export const AzureConnectionModal: React.FC<{ isOpen: boolean; onClose: () => vo
 
   if (!isOpen) return null;
 
-  // In-App Microsoft Device Code Flow
   const handleStartInAppAuth = async () => {
     try {
       setLoading(true);
@@ -104,10 +103,8 @@ export const AzureConnectionModal: React.FC<{ isOpen: boolean; onClose: () => vo
       setDeviceInfo(devCode);
       setDeviceStatus('Please enter code in browser and approve access.');
 
-      // Automatically open login URL in a new window/tab
       window.open(devCode.verification_uri, '_blank');
 
-      // Poll in background
       const token = await pollDeviceCodeToken(
         devCode.device_code,
         devCode.interval || 5,
@@ -115,7 +112,6 @@ export const AzureConnectionModal: React.FC<{ isOpen: boolean; onClose: () => vo
         (msg) => setDeviceStatus(msg)
       );
 
-      // Fetch user subscriptions with access token
       const { account, subscriptions } = await fetchAzureSubscriptions(token.access_token);
       
       saveAuthSession(token, account, subscriptions);
@@ -131,7 +127,7 @@ export const AzureConnectionModal: React.FC<{ isOpen: boolean; onClose: () => vo
       }
 
       setDeviceInfo(null);
-      setDeviceStatus('Successfully authenticated with Microsoft Azure!');
+      setDeviceStatus('Successfully authenticated with Microsoft Azure.');
     } catch (err: any) {
       setError(err?.message || err?.toString() || 'Microsoft login encountered an error.');
     } finally {
@@ -161,7 +157,7 @@ export const AzureConnectionModal: React.FC<{ isOpen: boolean; onClose: () => vo
       setError(null);
       setInstallSuccessMsg(null);
       const res = await installAzCliInApp();
-      setInstallSuccessMsg(res || 'Azure CLI installed successfully!');
+      setInstallSuccessMsg(res || 'Azure CLI installed successfully.');
       await checkCli();
     } catch (err: any) {
       setError(err?.toString() || 'In-app installation encountered an issue.');
@@ -209,14 +205,14 @@ export const AzureConnectionModal: React.FC<{ isOpen: boolean; onClose: () => vo
                 width: '42px',
                 height: '42px',
                 borderRadius: '8px',
-                background: 'rgba(16, 185, 129, 0.12)',
-                border: '1px solid rgba(16, 185, 129, 0.3)',
+                background: 'rgba(255, 255, 255, 0.08)',
+                border: '1px solid rgba(255, 255, 255, 0.15)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
               }}
             >
-              <KeyRound size={24} color="#10b981" />
+              <KeyRound size={22} />
             </div>
             <div>
               <h2 style={{ fontSize: 'var(--text-lg)', fontWeight: 800, margin: 0 }}>
@@ -263,8 +259,8 @@ export const AzureConnectionModal: React.FC<{ isOpen: boolean; onClose: () => vo
                 cursor: 'pointer',
               }}
             >
-              <Zap size={14} color={authMethod === 'inapp' ? '#ffffff' : '#71717a'} />
-              ⚡ In-App Direct Login (Fastest)
+              <Zap size={14} />
+              In-App Direct Login
             </button>
             <button
               onClick={() => setAuthMethod('cli')}
@@ -284,7 +280,7 @@ export const AzureConnectionModal: React.FC<{ isOpen: boolean; onClose: () => vo
                 cursor: 'pointer',
               }}
             >
-              <Terminal size={14} color={authMethod === 'cli' ? '#ffffff' : '#71717a'} />
+              <Terminal size={14} />
               Local Azure CLI (az)
             </button>
           </div>
@@ -303,7 +299,7 @@ export const AzureConnectionModal: React.FC<{ isOpen: boolean; onClose: () => vo
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <ShieldCheck size={28} color="#3b82f6" />
+                <ShieldCheck size={28} />
                 <div>
                   <div style={{ fontSize: 'var(--text-base)', fontWeight: 800, color: '#fafafa' }}>
                     {loginStatus.account?.name || 'Authenticated User'}
@@ -380,7 +376,7 @@ export const AzureConnectionModal: React.FC<{ isOpen: boolean; onClose: () => vo
                         fontSize: '28px',
                         fontWeight: 900,
                         letterSpacing: '4px',
-                        color: '#3b82f6',
+                        color: '#fafafa',
                         margin: '8px 0',
                       }}
                     >
@@ -389,8 +385,8 @@ export const AzureConnectionModal: React.FC<{ isOpen: boolean; onClose: () => vo
 
                     <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginTop: '12px' }}>
                       <button className="btn btn-secondary btn-sm" onClick={handleCopyCode}>
-                        {copiedCode ? <CheckCircle2 size={13} color="#3b82f6" /> : <Copy size={13} />}
-                        {copiedCode ? 'Code Copied!' : 'Copy Code'}
+                        {copiedCode ? <CheckCircle2 size={13} /> : <Copy size={13} />}
+                        {copiedCode ? 'Code Copied' : 'Copy Code'}
                       </button>
                       <a
                         href={deviceInfo.verification_uri}
@@ -407,7 +403,7 @@ export const AzureConnectionModal: React.FC<{ isOpen: boolean; onClose: () => vo
                       <div
                         style={{
                           fontSize: '11px',
-                          color: '#3b82f6',
+                          color: '#a1a1aa',
                           marginTop: '12px',
                           display: 'flex',
                           alignItems: 'center',
@@ -415,7 +411,7 @@ export const AzureConnectionModal: React.FC<{ isOpen: boolean; onClose: () => vo
                           gap: '6px',
                         }}
                       >
-                        <span className="spinner" style={{ width: '10px', height: '10px' }} />
+                        <AppleSpinner size={12} />
                         {deviceStatus}
                       </div>
                     )}
@@ -429,8 +425,8 @@ export const AzureConnectionModal: React.FC<{ isOpen: boolean; onClose: () => vo
                     onClick={handleStartInAppAuth}
                     disabled={loading}
                   >
-                    {loading ? <span className="spinner" /> : <Zap size={18} />}
-                    {loading ? 'Connecting to Microsoft...' : '⚡ Start In-App Microsoft Sign-In'}
+                    {loading ? <AppleSpinner size={18} /> : <Zap size={18} />}
+                    {loading ? 'Connecting to Microsoft...' : 'Start In-App Microsoft Sign-In'}
                   </button>
                 )}
               </div>
@@ -444,7 +440,7 @@ export const AzureConnectionModal: React.FC<{ isOpen: boolean; onClose: () => vo
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <Terminal size={20} color="#a1a1aa" />
+                    <Terminal size={20} />
                     <div>
                       <div style={{ fontSize: 'var(--text-sm)', fontWeight: 700, color: '#fafafa' }}>
                         Azure CLI (<code>az</code>)
@@ -483,8 +479,8 @@ export const AzureConnectionModal: React.FC<{ isOpen: boolean; onClose: () => vo
                         onClick={handleAutoInstallCli}
                         disabled={isInstallingCli}
                       >
-                        {isInstallingCli ? <span className="spinner" style={{ width: '12px', height: '12px' }} /> : <DownloadCloud size={13} />}
-                        {isInstallingCli ? 'Installing...' : '⚡ 1-Click CLI Install'}
+                        {isInstallingCli ? <AppleSpinner size={13} /> : <DownloadCloud size={13} />}
+                        {isInstallingCli ? 'Installing...' : '1-Click CLI Install'}
                       </button>
                     </div>
                   </div>
@@ -502,7 +498,7 @@ export const AzureConnectionModal: React.FC<{ isOpen: boolean; onClose: () => vo
                   onClick={handleCliLogin}
                   disabled={loading}
                 >
-                  {loading ? <span className="spinner" /> : <Globe size={18} />}
+                  {loading ? <AppleSpinner size={18} /> : <Globe size={18} />}
                   {loading ? 'Launching Browser Login...' : 'Sign in via Azure CLI'}
                 </button>
               </div>
@@ -531,7 +527,7 @@ export const AzureConnectionModal: React.FC<{ isOpen: boolean; onClose: () => vo
         {/* Modal Footer */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px' }}>
           <span style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>
-            🔒 100% Local-first: Direct authentication with Microsoft Entra ID.
+            Direct local authentication with Microsoft Entra ID.
           </span>
           <button className="btn btn-secondary btn-sm" onClick={onClose}>
             Close

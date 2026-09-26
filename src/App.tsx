@@ -1,17 +1,21 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense, lazy } from 'react';
 import { Sidebar } from './components/layout/Sidebar';
 import { Header } from './components/layout/Header';
 import { Dashboard } from './components/dashboard/Dashboard';
 import { VisualBuilder } from './components/builder/VisualBuilder';
-import { CodeEditor } from './components/editor/CodeEditor';
-import { SplitView } from './components/editor/SplitView';
-import { WhatIfView } from './components/whatif/WhatIfView';
-import { DeployView } from './components/deploy/DeployView';
-import { ModuleVersionManager } from './components/modules/ModuleVersionManager';
+import { AppleSpinner } from './components/common/AppleSpinner';
 import { RegionReplicationModal } from './components/replicate/RegionReplicationModal';
 import { NewEnvironmentModal } from './components/environments/NewEnvironmentModal';
 
-import { CloudAccountView } from './components/account/CloudAccountView';
+// Lazy-load heavy views (Monaco Editor, Deployments, WhatIf, Billing, Live Resources)
+const CodeEditor = lazy(() => import('./components/editor/CodeEditor').then((m) => ({ default: m.CodeEditor })));
+const SplitView = lazy(() => import('./components/editor/SplitView').then((m) => ({ default: m.SplitView })));
+const WhatIfView = lazy(() => import('./components/whatif/WhatIfView').then((m) => ({ default: m.WhatIfView })));
+const DeployView = lazy(() => import('./components/deploy/DeployView').then((m) => ({ default: m.DeployView })));
+const BlueprintsView = lazy(() => import('./components/blueprints/BlueprintsView').then((m) => ({ default: m.BlueprintsView })));
+const CreditsBillingView = lazy(() => import('./components/billing/CreditsBillingView').then((m) => ({ default: m.CreditsBillingView })));
+const LiveResourcesView = lazy(() => import('./components/resources/LiveResourcesView').then((m) => ({ default: m.LiveResourcesView })));
+const CloudAccountView = lazy(() => import('./components/account/CloudAccountView').then((m) => ({ default: m.CloudAccountView })));
 
 import { useAzureStore, useEnvironmentStore, useUIStore } from './stores';
 import { checkLoginStatus, checkAzCli } from './hooks/useTauri';
@@ -90,16 +94,24 @@ export const App: React.FC = () => {
   }, []);
 
   const renderContent = () => {
-    if (activeNav === 'dashboard' || activeNav === 'templates') {
+    if (activeNav === 'dashboard') {
       return <Dashboard onNewEnv={() => setNewEnvModalOpen(true)} />;
+    }
+
+    if (activeNav === 'templates') {
+      return <BlueprintsView />;
+    }
+
+    if (activeNav === 'credits') {
+      return <CreditsBillingView />;
+    }
+
+    if (activeNav === 'resources') {
+      return <LiveResourcesView />;
     }
 
     if (activeNav === 'account') {
       return <CloudAccountView />;
-    }
-
-    if (activeNav === 'modules') {
-      return <ModuleVersionManager />;
     }
 
     if (activeNav === 'deployments') {
@@ -110,11 +122,10 @@ export const App: React.FC = () => {
       if (!currentEnvironment) {
         return (
           <div className="empty-state">
-            <span className="empty-state-icon">🏗️</span>
             <h3>No Environment Active</h3>
             <p>Choose an environment from the dashboard or create one to start designing.</p>
             <button className="btn btn-primary" style={{ marginTop: '12px' }} onClick={() => setNewEnvModalOpen(true)}>
-              ➕ Create Environment
+              Create Environment
             </button>
           </div>
         );
@@ -144,7 +155,17 @@ export const App: React.FC = () => {
       <Sidebar />
       <div className="app-main">
         <Header />
-        <main className="app-content">{renderContent()}</main>
+        <main className="app-content">
+          <Suspense
+            fallback={
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', minHeight: '300px' }}>
+                <AppleSpinner size={32} />
+              </div>
+            }
+          >
+            {renderContent()}
+          </Suspense>
+        </main>
       </div>
 
       <RegionReplicationModal />

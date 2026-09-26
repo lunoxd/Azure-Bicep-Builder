@@ -447,3 +447,66 @@ pub fn http_get_json(url: String, bearer_token: Option<String>) -> Result<String
     }
 }
 
+#[tauri::command]
+pub fn http_arm_request(
+
+    method: String,
+    url: String,
+    bearer_token: Option<String>,
+    headers: Option<std::collections::HashMap<String, String>>,
+    body: Option<String>,
+) -> Result<HttpResponse, String> {
+    let mut cmd = Command::new("curl");
+    cmd.args(&["-s", "-w", "\n__HTTP_STATUS__:%{http_code}"]);
+    cmd.arg("-X").arg(&method);
+
+    if let Some(token) = bearer_token {
+        if !token.is_empty() {
+            cmd.arg("-H").arg(format!("Authorization: Bearer {}", token));
+        }
+    }
+
+    if let Some(hdrs) = headers {
+        for (k, v) in hdrs {
+            cmd.arg("-H").arg(format!("{}: {}", k, v));
+        }
+    }
+
+    if let Some(req_body) = &body {
+        if !req_body.is_empty() {
+            cmd.arg("-H").arg("Content-Type: application/json");
+            cmd.arg("-d").arg(req_body);
+        }
+    }
+
+    cmd.arg(&url);
+
+    let output = cmd.output().map_err(|e| format!("HTTP request execution failed: {}", e))?;
+    let raw_out = String::from_utf8_lossy(&output.stdout).to_string();
+    let raw_err = String::from_utf8_lossy(&output.stderr).to_string();
+
+    let (response_body, status_code) = if let Some(idx) = raw_out.rfind("\n__HTTP_STATUS__:") {
+        let (body_part, status_part) = raw_out.split_at(idx);
+        let code_str = status_part.trim().replace("__HTTP_STATUS__:", "").trim().to_string();
+        let code = code_str.parse::<u16>().unwrap_or(if output.status.success() { 200 } else { 500 });
+        (body_part.to_string(), code)
+    } else {
+        (raw_out, if output.status.success() { 200 } else { 500 })
+    };
+
+    let is_ok = (200..300).contains(&status_code);
+
+    Ok(HttpResponse {
+        status: status_code,
+        ok: is_ok,
+        body: response_body,
+        error: if !is_ok && !raw_err.is_empty() { Some(raw_err) } else { None },
+    })
+}
+
+#[tauri::command]
+pub fn delete_resource_native(resource_id: String) -> Result<String, String> {
+    run_az(&["resource", "delete", "--ids", &resource_id, "--verbose"])
+}
+
+

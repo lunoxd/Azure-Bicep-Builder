@@ -3,8 +3,10 @@ import { useEnvironmentStore, useDeploymentStore, useAzureStore } from '../../st
 import { generateBicepCode, runWhatIf } from '../../hooks/useTauri';
 import type { WhatIfChangeType } from '../../types';
 import { RefreshCw, Rocket, Plus, Edit2, Trash2, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { AppleSpinner } from '../common/AppleSpinner';
 
 export const WhatIfView: React.FC = () => {
+
   const { currentEnvironment, setViewMode } = useEnvironmentStore();
   const { selectedSubscription } = useAzureStore();
   const { whatIfResult, setWhatIfResult, isRunningWhatIf, setIsRunningWhatIf } = useDeploymentStore();
@@ -80,7 +82,7 @@ export const WhatIfView: React.FC = () => {
             onClick={handleRunWhatIf}
             disabled={isRunningWhatIf}
           >
-            {isRunningWhatIf ? <span className="spinner" style={{ width: '14px', height: '14px' }} /> : <RefreshCw size={15} />}
+            {isRunningWhatIf ? <AppleSpinner size={15} /> : <RefreshCw size={15} />}
             Refresh What-If
           </button>
           <button
@@ -94,7 +96,7 @@ export const WhatIfView: React.FC = () => {
 
       {isRunningWhatIf ? (
         <div className="empty-state" style={{ minHeight: '340px' }}>
-          <div className="spinner" style={{ width: '32px', height: '32px', borderWidth: '3px', borderTopColor: '#10b981' }} />
+          <AppleSpinner size={36} color="#10b981" />
           <h3 style={{ marginTop: '16px', color: '#fafafa', fontSize: 'var(--text-lg)', fontWeight: 700 }}>
             Analyzing ARM Infrastructure Delta...
           </h3>
@@ -103,6 +105,7 @@ export const WhatIfView: React.FC = () => {
           </p>
         </div>
       ) : (
+
         <>
           {/* Large Summary Metric Panels */}
           <div className="whatif-summary">
